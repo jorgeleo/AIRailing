@@ -47,6 +47,15 @@ public sealed class HawthorneConfigurationLoaderTests
     }
 
     [Fact]
+    public void Load_WhenCyclomaticThresholdIsConfigured_UsesConfiguredValue()
+    {
+        var result = HawthorneConfigurationLoader.Load(ImmutableArray.Create<AdditionalText>(
+            new TestAdditionalText("/project/hawthorne.json", "{ \"version\": 1, \"rules\": { \"HAW101\": { \"maximum\": 2 } } }")));
+
+        Assert.Equal(2, Assert.IsType<HawthorneConfiguration>(result.Configuration).MaximumCyclomaticComplexity);
+    }
+
+    [Fact]
     public void Load_WhenMultipleConfigurationFilesAreSupplied_ReturnsAnError()
     {
         var result = HawthorneConfigurationLoader.Load(ImmutableArray.Create<AdditionalText>(

@@ -96,6 +96,12 @@ internal static class HawthorneConfigurationLoader
                     if (error is not null) return HawthorneConfigurationLoadResult.Invalid(error.Replace("HAW105", "HAW103"), configurationFiles[0]);
                     configuration = configuration.WithMaximumNestingDepth(maximum);
                 }
+                if (rule.Name == "HAW101")
+                {
+                    var maximum = GetPositiveInteger(rule.Value, "maximum", configuration.MaximumCyclomaticComplexity, out var error);
+                    if (error is not null) return HawthorneConfigurationLoadResult.Invalid(error.Replace("HAW105", "HAW101"), configurationFiles[0]);
+                    configuration = configuration.WithMaximumCyclomaticComplexity(maximum);
+                }
             }
 
             return LoadExceptions(root, configuration, configurationFiles[0]);
