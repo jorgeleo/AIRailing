@@ -41,6 +41,9 @@ coverage/
 artifacts/
 packages/
 
+# Local release credential helper; intentionally never tracked.
+scripts/release-local.sh
+
 # OS and tooling files
 .DS_Store
 Thumbs.db
