@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using Hawthorne.Analyzers.Configuration;
+using Hawthorne.Analyzers.Diagnostics;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
@@ -75,6 +76,43 @@ public sealed class HawthorneConfigurationLoaderTests
 
         Assert.False(result.IsValid);
         Assert.Equal("Each exception file must be a non-wildcard project-relative path.", result.ErrorMessage);
+    }
+
+    [Fact]
+    public void CreateHawthorneDiagnostic_WhenSeverityIsConfigured_UsesEffectiveSeverity()
+    {
+        var result = HawthorneConfigurationLoader.Load(ImmutableArray.Create<AdditionalText>(
+            new TestAdditionalText("/project/hawthorne.json", """
+                { "version": 1, "rules": { "HAW105": { "severity": "error" } } }
+                """)));
+        var tree = CSharpSyntaxTree.ParseText("class Example { }", path: "/project/Example.cs");
+
+        var diagnostic = DiagnosticReportingExtensions.CreateHawthorneDiagnostic(
+            HawthorneDiagnosticDescriptors.HAW105,
+            tree.GetRoot().GetLocation(),
+            Assert.IsType<HawthorneConfiguration>(result.Configuration),
+            "detail");
+
+        Assert.NotNull(diagnostic);
+        Assert.Equal(DiagnosticSeverity.Error, diagnostic.Severity);
+    }
+
+    [Fact]
+    public void CreateHawthorneDiagnostic_WhenRuleIsExcepted_ReturnsNull()
+    {
+        var result = HawthorneConfigurationLoader.Load(ImmutableArray.Create<AdditionalText>(
+            new TestAdditionalText("/project/hawthorne.json", """
+                { "version": 1, "exceptions": [{ "file": "Example.cs", "rules": ["HAW105"], "reason": "Required." }] }
+                """)));
+        var tree = CSharpSyntaxTree.ParseText("class Example { }", path: "/project/Example.cs");
+
+        var diagnostic = DiagnosticReportingExtensions.CreateHawthorneDiagnostic(
+            HawthorneDiagnosticDescriptors.HAW105,
+            tree.GetRoot().GetLocation(),
+            Assert.IsType<HawthorneConfiguration>(result.Configuration),
+            "detail");
+
+        Assert.Null(diagnostic);
     }
 
     private sealed class TestAdditionalText(string path, string text) : AdditionalText

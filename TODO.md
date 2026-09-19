@@ -7,8 +7,8 @@ the status section before stopping work.
 ## Current status
 
 - Current phase: Phase 2 — JSON configuration
-- Last completed item: validated JSON configuration and file-scoped exception engine
-- Next item: central diagnostic reporting with dynamic effective severity
+- Last completed item: central diagnostic reporting with dynamic effective severity
+- Next item: HAW105 method-length metric and analyzer
 - Blockers: none
 
 ## Foundation
@@ -26,7 +26,7 @@ the status section before stopping work.
 - [x] Load exactly one `hawthorne.json` from `AdditionalFiles`.
 - [x] Validate configuration and report compiler-error `HAW900` without normal analysis.
 - [x] Implement the project-relative file-exception contract.
-- [ ] Implement dynamic effective diagnostic severity.
+- [x] Implement dynamic effective diagnostic severity.
 - [ ] Implement `HAW901` pragma-suppression warning.
 
 ## Rules, in implementation order
