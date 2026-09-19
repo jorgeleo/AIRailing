@@ -47,7 +47,7 @@ the status section before stopping work.
 
 ## User-owned completion items
 
-- [ ] Choose final NuGet package identity, versioning, license, repository URL, and documentation/help-link base URL.
+- [ ] Choose the release version and license; package ID and repository metadata are configured.
 - [x] Commit and manage the Git repository history.
 - [x] Choose and configure the CI provider, including any package-feed credentials.
 - [ ] Provide or approve the real repositories used for architecture-rule calibration, then review the recorded false-positive results.
@@ -56,7 +56,7 @@ the status section before stopping work.
 ## Release readiness
 
 - [ ] Calibrate architecture diagnostics against real repositories.
-- [ ] Add NuGet packaging metadata and package validation.
+- [x] Add NuGet packaging metadata and package validation.
 - [ ] Add CI build/test gate.
 - [ ] Verify Visual Studio, Visual Studio Code, and `dotnet build` consumption.
 

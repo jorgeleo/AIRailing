@@ -38,6 +38,7 @@ coverage/
 # NuGet local artifacts
 *.nupkg
 *.snupkg
+artifacts/
 packages/
 
 # OS and tooling files

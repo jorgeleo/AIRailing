@@ -5,6 +5,13 @@
     <RootNamespace>Hawthorne.Analyzers</RootNamespace>
     <PackageId>Hawthorne.Analyzers</PackageId>
     <Version>0.1.0-dev</Version>
+    <Authors>Jorge Leo</Authors>
+    <Description>Roslyn analyzers for unnecessary abstraction, indirection, hidden global state, and structural complexity in C# code.</Description>
+    <PackageTags>roslyn;analyzer;csharp;code-quality;complexity;architecture</PackageTags>
+    <RepositoryUrl>https://github.com/jorgeleo/AIRailing</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/jorgeleo/AIRailing</PackageProjectUrl>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <IsPackable>true</IsPackable>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
