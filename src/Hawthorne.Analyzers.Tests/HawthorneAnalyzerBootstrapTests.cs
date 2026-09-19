@@ -257,6 +257,16 @@ public sealed class HawthorneAnalyzerBootstrapTests
         Assert.Equal("Facade", diagnostic.Location.SourceTree!.GetRoot().FindToken(diagnostic.Location.SourceSpan.Start).ValueText);
     }
 
+    [Fact]
+    public async Task Analyze_WhenAsyncMethodOnlyAwaitsForwardedInvocation_ReportsHAW003()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText("class Service { public System.Threading.Tasks.Task<int> Get(int v) => null; } class Facade { private readonly Service s = new Service(); async System.Threading.Tasks.Task<int> Get(int v) { return await s.Get(v); } }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location), MetadataReference.CreateFromFile(typeof(System.Threading.Tasks.Task).Assembly.Location) });
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+        Assert.Equal("HAW003", Assert.Single(diagnostics).Id);
+    }
+
     private sealed class TestAdditionalText(string path, string text) : AdditionalText
     {
         public override string Path { get; } = path;

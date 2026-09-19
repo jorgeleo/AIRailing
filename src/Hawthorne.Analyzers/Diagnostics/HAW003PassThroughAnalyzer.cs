@@ -30,8 +30,9 @@ internal static class HAW003PassThroughAnalyzer
 
     private static bool IsForwarding(MethodDeclarationSyntax method)
     {
-        var invocation = method.ExpressionBody?.Expression as InvocationExpressionSyntax ??
-            (method.Body?.Statements.Count == 1 && method.Body.Statements[0] is ReturnStatementSyntax { Expression: InvocationExpressionSyntax returned } ? returned : null);
+        var expression = method.ExpressionBody?.Expression ??
+            (method.Body?.Statements.Count == 1 && method.Body.Statements[0] is ReturnStatementSyntax returned ? returned.Expression : null);
+        var invocation = expression as InvocationExpressionSyntax ?? (expression as AwaitExpressionSyntax)?.Expression as InvocationExpressionSyntax;
         return invocation is not null && invocation.ArgumentList.Arguments.Count == method.ParameterList.Parameters.Count &&
             invocation.ArgumentList.Arguments.Zip(method.ParameterList.Parameters, (argument, parameter) =>
                 argument.Expression is IdentifierNameSyntax identifier && identifier.Identifier.ValueText == parameter.Identifier.ValueText).All(value => value);
