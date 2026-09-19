@@ -199,6 +199,18 @@ public sealed class HawthorneAnalyzerBootstrapTests
     }
 
     [Fact]
+    public async Task Analyze_WhenStaticSelfFactoryCreatesFreshInitOnlyValues_DoesNotReportHAW004()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText("class Result { public bool Success { get; init; } public static Result SuccessResult => new Result { Success = true }; public static Result Create() => new Result { Success = true }; }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
     public async Task Analyze_WhenFactoryOnlyConstructsOneType_ReportsHAW002()
     {
         var compilation = CSharpCompilation.Create("TestAssembly",
@@ -233,6 +245,54 @@ public sealed class HawthorneAnalyzerBootstrapTests
             new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
         var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
         Assert.Equal("HAW003", Assert.Single(diagnostics).Id);
+    }
+
+    [Fact]
+    public async Task Analyze_WhenOverrideForwardsToItsDependency_DoesNotReportHAW003()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText("abstract class Base { public abstract int Get(int value); } class Service { public int Get(int value) => value; } class Adapter : Base { private readonly Service service = new Service(); public override int Get(int value) => service.Get(value); }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Analyze_WhenImplicitInterfaceImplementationForwardsToItsDependency_DoesNotReportHAW003()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText("interface IWorker { int Get(int value); } class Service { public int Get(int value) => value; } class Adapter : IWorker { private readonly Service service = new Service(); public int Get(int value) => service.Get(value); } class Alternative : IWorker { public int Get(int value) => value; }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Analyze_WhenZeroArgumentMethodDelegatesToPrivateWork_DoesNotReportHAW003()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText("class Example { bool IsReady() => CanAccessDatabase(); bool CanAccessDatabase() => true; }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Analyze_WhenZeroArgumentMethodPerformsAFluentQuery_DoesNotReportHAW003()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText("class Result { } class Query { public Query Filter() => this; public Result Finish() => new Result(); } class Example { private readonly Query query = new Query(); Result Find() => query.Filter().Finish(); }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+
+        Assert.Empty(diagnostics);
     }
 
     [Fact]
@@ -275,7 +335,39 @@ public sealed class HawthorneAnalyzerBootstrapTests
         var compilation = CSharpCompilation.Create("TestAssembly", new[] { CSharpSyntaxTree.ParseText(types + "class Host {" + fields + "}") },
             new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
         var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
-        Assert.Equal("HAW104", Assert.Single(diagnostics).Id);
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("HAW104", diagnostic.Id);
+        Assert.Contains("Examples:", diagnostic.GetMessage());
+    }
+
+    [Fact]
+    public async Task Analyze_WhenGenericDependencyExceedsConfiguredMaximum_ReportsTheTypeArgument()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText("class Customer { } class Envelope<T> { } class Host { private Envelope<Customer> value; }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var options = new CompilationWithAnalyzersOptions(new AnalyzerOptions(ImmutableArray.Create<AdditionalText>(
+            new TestAdditionalText("/project/hawthorne.json", "{ \"version\": 1, \"rules\": { \"HAW104\": { \"maximum\": 1 } } }"))), null, true, false, false);
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), options).GetAnalyzerDiagnosticsAsync();
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("HAW104", diagnostic.Id);
+        Assert.Contains("Customer", diagnostic.GetMessage());
+    }
+
+    [Fact]
+    public async Task Analyze_WhenNestedTypeUsesDependency_DoesNotCountItForTheEnclosingType()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText("class DirectDependency { } class NestedDependency { } class Outer { private DirectDependency direct; class Nested { void Use() { var value = new NestedDependency(); } } }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var options = new CompilationWithAnalyzersOptions(new AnalyzerOptions(ImmutableArray.Create<AdditionalText>(
+            new TestAdditionalText("/project/hawthorne.json", "{ \"version\": 1, \"rules\": { \"HAW104\": { \"maximum\": 1 } } }"))), null, true, false, false);
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), options).GetAnalyzerDiagnosticsAsync();
+
+        Assert.Empty(diagnostics);
     }
 
     [Fact]
@@ -291,6 +383,17 @@ public sealed class HawthorneAnalyzerBootstrapTests
     public async Task Analyze_WhenInterfaceHasMultipleConcreteImplementations_DoesNotReportHAW001()
     {
         var compilation = CSharpCompilation.Create("TestAssembly", new[] { CSharpSyntaxTree.ParseText("interface IWorker { } class FirstWorker : IWorker { } class SecondWorker : IWorker { }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Analyze_WhenOnlyAReferencedInterfaceHasOneImplementation_DoesNotReportHAW001()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly", new[] { CSharpSyntaxTree.ParseText("class Worker : System.IDisposable { public void Dispose() { } }") },
             new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
 
         var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();

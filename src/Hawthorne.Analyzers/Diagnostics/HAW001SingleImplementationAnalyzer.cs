@@ -19,7 +19,7 @@ internal static class HAW001SingleImplementationAnalyzer
         }, SymbolKind.NamedType);
         context.RegisterCompilationEndAction(c =>
         {
-            foreach (var entry in implementations.Where(entry => entry.Value.Count == 1))
+            foreach (var entry in implementations.Where(entry => entry.Key.Locations.Any(location => location.IsInSource) && entry.Value.Count == 1))
             {
                 var implementation = entry.Value.Single();
                 var diagnostic = DiagnosticReportingExtensions.CreateHawthorneDiagnostic(HawthorneDiagnosticDescriptors.HAW001,

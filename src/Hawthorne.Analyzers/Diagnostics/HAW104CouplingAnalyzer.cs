@@ -30,8 +30,9 @@ internal static class HAW104CouplingAnalyzer
         foreach (var declaration in type.DeclaringSyntaxReferences)
         {
             var model = context.Compilation.GetSemanticModel(declaration.SyntaxTree);
-            foreach (var node in declaration.GetSyntax().DescendantNodes().Where(node => node is Microsoft.CodeAnalysis.CSharp.Syntax.MethodDeclarationSyntax))
+            foreach (var node in declaration.GetSyntax().DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.MethodDeclarationSyntax>())
             {
+                if (!SymbolEqualityComparer.Default.Equals(model.GetDeclaredSymbol(node)?.ContainingType, type)) continue;
                 var operation = model.GetOperation(node);
                 if (operation is not null) CollectOperations(operation, type, dependencies);
             }
@@ -40,7 +41,11 @@ internal static class HAW104CouplingAnalyzer
         if (dependencies.Count > configuration.MaximumClassCoupling)
         {
             var diagnostic = DiagnosticReportingExtensions.CreateHawthorneDiagnostic(HawthorneDiagnosticDescriptors.HAW104,
-                type.Locations.FirstOrDefault() ?? Location.None, configuration, type.Name, dependencies.Count, configuration.MaximumClassCoupling);
+                type.Locations.FirstOrDefault() ?? Location.None, configuration, type.Name, dependencies.Count, configuration.MaximumClassCoupling,
+                string.Join(", ", dependencies
+                    .OrderBy(dependency => dependency.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat), StringComparer.Ordinal)
+                    .Take(5)
+                    .Select(dependency => dependency.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat))));
             if (diagnostic is not null) context.ReportDiagnostic(diagnostic);
         }
     }
@@ -56,8 +61,10 @@ internal static class HAW104CouplingAnalyzer
     private static void Add(ITypeSymbol? symbol, INamedTypeSymbol owner, HashSet<INamedTypeSymbol> dependencies)
     {
         if (symbol is not INamedTypeSymbol named || SymbolEqualityComparer.Default.Equals(named, owner) || named.SpecialType != SpecialType.None) return;
-        if (named.Name is "Task" or "ValueTask" or "List" or "IEnumerable" or "ICollection" or "Dictionary" or "Nullable")
+        if (named.IsGenericType)
             foreach (var argument in named.TypeArguments) Add(argument, owner, dependencies);
+        if (named.Name is "Task" or "ValueTask" or "List" or "IEnumerable" or "ICollection" or "Dictionary" or "Nullable")
+            return;
         else dependencies.Add(named);
     }
 }

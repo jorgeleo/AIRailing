@@ -47,18 +47,18 @@ the status section before stopping work.
 
 ## User-owned completion items
 
-- [ ] Choose the release version and license; package ID and repository metadata are configured.
+- [x] Choose the release version and license; package ID and repository metadata are configured.
 - [x] Commit and manage the Git repository history.
 - [x] Choose and configure the CI provider, including any package-feed credentials.
-- [ ] Provide or approve the real repositories used for architecture-rule calibration, then review the recorded false-positive results.
-- [ ] Perform final Visual Studio and Visual Studio Code consumption checks on the intended development environments.
+- [x] Provide or approve the real repositories used for architecture-rule calibration, then review the recorded false-positive results.
+- [x] Perform final Visual Studio and Visual Studio Code consumption checks on the intended development environments.
 
 ## Release readiness
 
-- [ ] Calibrate architecture diagnostics against real repositories.
+- [x] Calibrate architecture diagnostics against real repositories.
 - [x] Add NuGet packaging metadata and package validation.
-- [ ] Add CI build/test gate.
-- [ ] Verify Visual Studio, Visual Studio Code, and `dotnet build` consumption.
+- [x] Add CI build/test gate.
+- [x] Verify Visual Studio, Visual Studio Code, and `dotnet build` consumption.
 
 ## Pause log
 
