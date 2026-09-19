@@ -13,7 +13,8 @@ internal sealed class HawthorneConfiguration
         string? projectDirectory,
         Hawthorne105Configuration methodLength,
         int maximumNestingDepth,
-        int maximumCyclomaticComplexity)
+        int maximumCyclomaticComplexity,
+        int maximumCognitiveComplexity)
     {
         Rules = rules;
         Exceptions = exceptions;
@@ -21,6 +22,7 @@ internal sealed class HawthorneConfiguration
         MethodLength = methodLength;
         MaximumNestingDepth = maximumNestingDepth;
         MaximumCyclomaticComplexity = maximumCyclomaticComplexity;
+        MaximumCognitiveComplexity = maximumCognitiveComplexity;
     }
 
     internal ImmutableDictionary<string, HawthorneRuleConfiguration> Rules { get; }
@@ -32,27 +34,30 @@ internal sealed class HawthorneConfiguration
     internal Hawthorne105Configuration MethodLength { get; }
     internal int MaximumNestingDepth { get; }
     internal int MaximumCyclomaticComplexity { get; }
+    internal int MaximumCognitiveComplexity { get; }
 
     internal HawthorneRuleConfiguration GetRule(string diagnosticId) => Rules[diagnosticId];
 
     internal HawthorneConfiguration WithRule(string diagnosticId, HawthorneRuleConfiguration rule) =>
-        new(Rules.SetItem(diagnosticId, rule), Exceptions, ProjectDirectory, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity);
+        new(Rules.SetItem(diagnosticId, rule), Exceptions, ProjectDirectory, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity);
 
     internal HawthorneConfiguration WithExceptions(ImmutableArray<HawthorneException> exceptions) =>
-        new(Rules, exceptions, ProjectDirectory, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity);
+        new(Rules, exceptions, ProjectDirectory, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity);
 
     internal HawthorneConfiguration WithMethodLength(Hawthorne105Configuration methodLength) =>
-        new(Rules, Exceptions, ProjectDirectory, methodLength, MaximumNestingDepth, MaximumCyclomaticComplexity);
+        new(Rules, Exceptions, ProjectDirectory, methodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity);
     internal HawthorneConfiguration WithMaximumNestingDepth(int maximum) =>
-        new(Rules, Exceptions, ProjectDirectory, MethodLength, maximum, MaximumCyclomaticComplexity);
+        new(Rules, Exceptions, ProjectDirectory, MethodLength, maximum, MaximumCyclomaticComplexity, MaximumCognitiveComplexity);
     internal HawthorneConfiguration WithMaximumCyclomaticComplexity(int maximum) =>
-        new(Rules, Exceptions, ProjectDirectory, MethodLength, MaximumNestingDepth, maximum);
+        new(Rules, Exceptions, ProjectDirectory, MethodLength, MaximumNestingDepth, maximum, MaximumCognitiveComplexity);
+    internal HawthorneConfiguration WithMaximumCognitiveComplexity(int maximum) =>
+        new(Rules, Exceptions, ProjectDirectory, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, maximum);
 
     internal static HawthorneConfiguration CreateDefaults(IEnumerable<string> diagnosticIds, string? projectDirectory = null) =>
         new(diagnosticIds.ToImmutableDictionary(
             diagnosticId => diagnosticId,
             _ => HawthorneRuleConfiguration.Default,
-            StringComparer.Ordinal), ImmutableArray<HawthorneException>.Empty, projectDirectory, Hawthorne105Configuration.Default, 4, 10);
+            StringComparer.Ordinal), ImmutableArray<HawthorneException>.Empty, projectDirectory, Hawthorne105Configuration.Default, 4, 10, 15);
 }
 
 internal sealed class Hawthorne105Configuration

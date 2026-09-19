@@ -102,6 +102,12 @@ internal static class HawthorneConfigurationLoader
                     if (error is not null) return HawthorneConfigurationLoadResult.Invalid(error.Replace("HAW105", "HAW101"), configurationFiles[0]);
                     configuration = configuration.WithMaximumCyclomaticComplexity(maximum);
                 }
+                if (rule.Name == "HAW102")
+                {
+                    var maximum = GetPositiveInteger(rule.Value, "maximum", configuration.MaximumCognitiveComplexity, out var error);
+                    if (error is not null) return HawthorneConfigurationLoadResult.Invalid(error.Replace("HAW105", "HAW102"), configurationFiles[0]);
+                    configuration = configuration.WithMaximumCognitiveComplexity(maximum);
+                }
             }
 
             return LoadExceptions(root, configuration, configurationFiles[0]);

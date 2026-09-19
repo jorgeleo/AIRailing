@@ -160,6 +160,20 @@ public sealed class HawthorneAnalyzerBootstrapTests
         Assert.Equal("HAW101", Assert.Single(diagnostics).Id);
     }
 
+    [Fact]
+    public async Task Analyze_WhenCognitiveComplexityExceedsConfiguredMaximum_ReportsHAW102()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText("class Example { void Complex() { if (true) { for (;;) { } } } }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var options = new CompilationWithAnalyzersOptions(new AnalyzerOptions(ImmutableArray.Create<AdditionalText>(
+            new TestAdditionalText("/project/hawthorne.json", "{ \"version\": 1, \"rules\": { \"HAW102\": { \"maximum\": 2 } } }"))), null, true, false, false);
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), options).GetAnalyzerDiagnosticsAsync();
+
+        Assert.Equal("HAW102", Assert.Single(diagnostics).Id);
+    }
+
     private sealed class TestAdditionalText(string path, string text) : AdditionalText
     {
         public override string Path { get; } = path;
