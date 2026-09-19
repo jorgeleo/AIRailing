@@ -7,8 +7,8 @@ the status section before stopping work.
 ## Current status
 
 - Current phase: Phase 2 — JSON configuration
-- Last completed item: HAW105 method-length analyzer and acceptance coverage
-- Next item: HAW101 cyclomatic-complexity calculator and analyzer
+- Last completed item: HAW101 cyclomatic-complexity calculator and default-threshold analyzer
+- Next item: make HAW101 threshold configurable, then implement HAW102 cognitive complexity
 - Blockers: none
 
 ## Foundation
@@ -33,7 +33,7 @@ the status section before stopping work.
 
 - [x] HAW105 — method length, including exact executable-statement and line tests.
 - [x] HAW103 — maximum semantic nesting depth with exact metric tests.
-- [ ] HAW101 — cyclomatic complexity with all defined branch constructs counted.
+- [ ] HAW101 — calculator and default-threshold analyzer implemented; JSON threshold configuration remains.
 - [ ] HAW102 — cognitive complexity with exact metric tests.
 - [ ] HAW004 — hidden singleton state.
 - [ ] HAW002 — speculative factory.

@@ -146,6 +146,20 @@ public sealed class HawthorneAnalyzerBootstrapTests
         Assert.Empty(diagnostics);
     }
 
+    [Fact]
+    public async Task Analyze_WhenCyclomaticComplexityExceedsDefault_ReportsHAW101()
+    {
+        var branches = string.Concat(Enumerable.Range(0, 10).Select(index => $"if (value == {index}) {{ }}"));
+        var compilation = CSharpCompilation.Create(
+            "TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText($"class Example {{ void Complex(int value) {{ {branches} }} }}") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+
+        Assert.Equal("HAW101", Assert.Single(diagnostics).Id);
+    }
+
     private sealed class TestAdditionalText(string path, string text) : AdditionalText
     {
         public override string Path { get; } = path;
