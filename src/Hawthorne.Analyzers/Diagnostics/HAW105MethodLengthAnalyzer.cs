@@ -9,9 +9,6 @@ namespace Hawthorne.Analyzers.Diagnostics;
 
 internal static class HAW105MethodLengthAnalyzer
 {
-    private const int MaximumExecutableStatements = 30;
-    private const int MaximumPhysicalLines = 50;
-
     internal static void Register(CompilationStartAnalysisContext context, HawthorneConfiguration configuration)
     {
         context.RegisterSyntaxNodeAction(
@@ -22,18 +19,18 @@ internal static class HAW105MethodLengthAnalyzer
     private static void Analyze(MethodDeclarationSyntax method, SyntaxNodeAnalysisContext context, HawthorneConfiguration configuration)
     {
         var statements = MethodLengthCalculator.CountExecutableStatements(method);
-        if (statements > MaximumExecutableStatements)
+        if (statements > configuration.MethodLength.MaximumExecutableStatements)
         {
             context.ReportHawthorneDiagnostic(HawthorneDiagnosticDescriptors.HAW105, method.Identifier.GetLocation(), configuration,
-                $"Method '{method.Identifier.ValueText}' contains {statements} executable statements; maximum allowed is {MaximumExecutableStatements}");
+                $"Method '{method.Identifier.ValueText}' contains {statements} executable statements; maximum allowed is {configuration.MethodLength.MaximumExecutableStatements}");
             return;
         }
 
         var lines = MethodLengthCalculator.CountPhysicalLines(method);
-        if (lines > MaximumPhysicalLines)
+        if (lines > configuration.MethodLength.MaximumPhysicalLines)
         {
             context.ReportHawthorneDiagnostic(HawthorneDiagnosticDescriptors.HAW105, method.Identifier.GetLocation(), configuration,
-                $"Method '{method.Identifier.ValueText}' spans {lines} physical lines; maximum allowed is {MaximumPhysicalLines}");
+                $"Method '{method.Identifier.ValueText}' spans {lines} physical lines; maximum allowed is {configuration.MethodLength.MaximumPhysicalLines}");
         }
     }
 }

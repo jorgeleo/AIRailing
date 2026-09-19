@@ -10,11 +10,13 @@ internal sealed class HawthorneConfiguration
     private HawthorneConfiguration(
         ImmutableDictionary<string, HawthorneRuleConfiguration> rules,
         ImmutableArray<HawthorneException> exceptions,
-        string? projectDirectory)
+        string? projectDirectory,
+        Hawthorne105Configuration methodLength)
     {
         Rules = rules;
         Exceptions = exceptions;
         ProjectDirectory = projectDirectory;
+        MethodLength = methodLength;
     }
 
     internal ImmutableDictionary<string, HawthorneRuleConfiguration> Rules { get; }
@@ -23,19 +25,38 @@ internal sealed class HawthorneConfiguration
 
     internal string? ProjectDirectory { get; }
 
+    internal Hawthorne105Configuration MethodLength { get; }
+
     internal HawthorneRuleConfiguration GetRule(string diagnosticId) => Rules[diagnosticId];
 
     internal HawthorneConfiguration WithRule(string diagnosticId, HawthorneRuleConfiguration rule) =>
-        new(Rules.SetItem(diagnosticId, rule), Exceptions, ProjectDirectory);
+        new(Rules.SetItem(diagnosticId, rule), Exceptions, ProjectDirectory, MethodLength);
 
     internal HawthorneConfiguration WithExceptions(ImmutableArray<HawthorneException> exceptions) =>
-        new(Rules, exceptions, ProjectDirectory);
+        new(Rules, exceptions, ProjectDirectory, MethodLength);
+
+    internal HawthorneConfiguration WithMethodLength(Hawthorne105Configuration methodLength) =>
+        new(Rules, Exceptions, ProjectDirectory, methodLength);
 
     internal static HawthorneConfiguration CreateDefaults(IEnumerable<string> diagnosticIds, string? projectDirectory = null) =>
         new(diagnosticIds.ToImmutableDictionary(
             diagnosticId => diagnosticId,
             _ => HawthorneRuleConfiguration.Default,
-            StringComparer.Ordinal), ImmutableArray<HawthorneException>.Empty, projectDirectory);
+            StringComparer.Ordinal), ImmutableArray<HawthorneException>.Empty, projectDirectory, Hawthorne105Configuration.Default);
+}
+
+internal sealed class Hawthorne105Configuration
+{
+    internal static Hawthorne105Configuration Default { get; } = new(30, 50);
+
+    internal Hawthorne105Configuration(int maximumExecutableStatements, int maximumPhysicalLines)
+    {
+        MaximumExecutableStatements = maximumExecutableStatements;
+        MaximumPhysicalLines = maximumPhysicalLines;
+    }
+
+    internal int MaximumExecutableStatements { get; }
+    internal int MaximumPhysicalLines { get; }
 }
 
 internal sealed class HawthorneException

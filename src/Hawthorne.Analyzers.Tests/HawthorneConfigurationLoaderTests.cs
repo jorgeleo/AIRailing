@@ -34,6 +34,19 @@ public sealed class HawthorneConfigurationLoaderTests
     }
 
     [Fact]
+    public void Load_WhenMethodLengthThresholdsAreConfigured_UsesConfiguredValues()
+    {
+        var result = HawthorneConfigurationLoader.Load(ImmutableArray.Create<AdditionalText>(
+            new TestAdditionalText("/project/hawthorne.json", """
+                { "version": 1, "rules": { "HAW105": { "maximumExecutableStatements": 2, "maximumPhysicalLines": 3 } } }
+                """)));
+
+        var configuration = Assert.IsType<HawthorneConfiguration>(result.Configuration);
+        Assert.Equal(2, configuration.MethodLength.MaximumExecutableStatements);
+        Assert.Equal(3, configuration.MethodLength.MaximumPhysicalLines);
+    }
+
+    [Fact]
     public void Load_WhenMultipleConfigurationFilesAreSupplied_ReturnsAnError()
     {
         var result = HawthorneConfigurationLoader.Load(ImmutableArray.Create<AdditionalText>(

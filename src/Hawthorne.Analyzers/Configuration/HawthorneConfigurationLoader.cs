@@ -80,6 +80,16 @@ internal static class HawthorneConfigurationLoader
                 }
 
                 configuration = configuration.WithRule(rule.Name, new HawthorneRuleConfiguration(enabled, severity));
+                if (rule.Name == "HAW105")
+                {
+                    var methodLength = GetMethodLength(rule.Value, configuration.MethodLength, out var methodLengthError);
+                    if (methodLengthError is not null)
+                    {
+                        return HawthorneConfigurationLoadResult.Invalid(methodLengthError, configurationFiles[0]);
+                    }
+
+                    configuration = configuration.WithMethodLength(methodLength);
+                }
             }
 
             return LoadExceptions(root, configuration, configurationFiles[0]);
@@ -198,5 +208,35 @@ internal static class HawthorneConfigurationLoader
     {
         errorMessage = $"hawthorne.json.rules.{ruleId}.severity must be error, warning, info, or hidden.";
         return default;
+    }
+
+    private static Hawthorne105Configuration GetMethodLength(JsonElement rule, Hawthorne105Configuration defaults, out string? errorMessage)
+    {
+        var statements = GetPositiveInteger(rule, "maximumExecutableStatements", defaults.MaximumExecutableStatements, out errorMessage);
+        if (errorMessage is not null)
+        {
+            return defaults;
+        }
+
+        var lines = GetPositiveInteger(rule, "maximumPhysicalLines", defaults.MaximumPhysicalLines, out errorMessage);
+        return errorMessage is null ? new Hawthorne105Configuration(statements, lines) : defaults;
+    }
+
+    private static int GetPositiveInteger(JsonElement rule, string propertyName, int defaultValue, out string? errorMessage)
+    {
+        if (!rule.TryGetProperty(propertyName, out var value))
+        {
+            errorMessage = null;
+            return defaultValue;
+        }
+
+        if (value.ValueKind == JsonValueKind.Number && value.TryGetInt32(out var parsed) && parsed > 0)
+        {
+            errorMessage = null;
+            return parsed;
+        }
+
+        errorMessage = $"hawthorne.json.rules.HAW105.{propertyName} must be an integer greater than zero.";
+        return defaultValue;
     }
 }
