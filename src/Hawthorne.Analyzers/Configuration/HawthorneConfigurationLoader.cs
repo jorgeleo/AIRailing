@@ -90,6 +90,12 @@ internal static class HawthorneConfigurationLoader
 
                     configuration = configuration.WithMethodLength(methodLength);
                 }
+                if (rule.Name == "HAW103")
+                {
+                    var maximum = GetPositiveInteger(rule.Value, "maximum", configuration.MaximumNestingDepth, out var error);
+                    if (error is not null) return HawthorneConfigurationLoadResult.Invalid(error.Replace("HAW105", "HAW103"), configurationFiles[0]);
+                    configuration = configuration.WithMaximumNestingDepth(maximum);
+                }
             }
 
             return LoadExceptions(root, configuration, configurationFiles[0]);

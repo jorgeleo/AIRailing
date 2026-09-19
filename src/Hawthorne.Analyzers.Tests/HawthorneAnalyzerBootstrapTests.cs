@@ -109,6 +109,43 @@ public sealed class HawthorneAnalyzerBootstrapTests
         Assert.Equal(DiagnosticSeverity.Warning, diagnostic.Severity);
     }
 
+    [Fact]
+    public async Task Analyze_WhenMethodExceedsPhysicalLineLimit_ReportsHAW105()
+    {
+        var blankLines = string.Concat(Enumerable.Repeat("\n", 50));
+        var compilation = CSharpCompilation.Create(
+            assemblyName: "TestAssembly",
+            syntaxTrees: new[] { CSharpSyntaxTree.ParseText($"class Example {{ void TooLong() {{{blankLines}return; }} }}") },
+            references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+
+        var diagnostics = await compilation
+            .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()))
+            .GetAnalyzerDiagnosticsAsync();
+
+        Assert.Equal("HAW105", Assert.Single(diagnostics).Id);
+    }
+
+    [Fact]
+    public async Task Analyze_WhenMethodLengthIsExceptedForItsFile_DoesNotReportHAW105()
+    {
+        var statements = string.Concat(Enumerable.Repeat("int value = 0;", 31));
+        var compilation = CSharpCompilation.Create(
+            assemblyName: "TestAssembly",
+            syntaxTrees: new[] { CSharpSyntaxTree.ParseText($"class Example {{ void TooLong() {{ {statements} }} }}", path: "/project/Legacy.cs") },
+            references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var additionalFiles = ImmutableArray.Create<AdditionalText>(
+            new TestAdditionalText("/project/hawthorne.json", """
+                { "version": 1, "exceptions": [{ "file": "Legacy.cs", "rules": ["HAW105"], "reason": "Legacy boundary." }] }
+                """));
+        var options = new CompilationWithAnalyzersOptions(new AnalyzerOptions(additionalFiles), null, true, false, false);
+
+        var diagnostics = await compilation
+            .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), options)
+            .GetAnalyzerDiagnosticsAsync();
+
+        Assert.Empty(diagnostics);
+    }
+
     private sealed class TestAdditionalText(string path, string text) : AdditionalText
     {
         public override string Path { get; } = path;

@@ -11,12 +11,14 @@ internal sealed class HawthorneConfiguration
         ImmutableDictionary<string, HawthorneRuleConfiguration> rules,
         ImmutableArray<HawthorneException> exceptions,
         string? projectDirectory,
-        Hawthorne105Configuration methodLength)
+        Hawthorne105Configuration methodLength,
+        int maximumNestingDepth)
     {
         Rules = rules;
         Exceptions = exceptions;
         ProjectDirectory = projectDirectory;
         MethodLength = methodLength;
+        MaximumNestingDepth = maximumNestingDepth;
     }
 
     internal ImmutableDictionary<string, HawthorneRuleConfiguration> Rules { get; }
@@ -26,23 +28,26 @@ internal sealed class HawthorneConfiguration
     internal string? ProjectDirectory { get; }
 
     internal Hawthorne105Configuration MethodLength { get; }
+    internal int MaximumNestingDepth { get; }
 
     internal HawthorneRuleConfiguration GetRule(string diagnosticId) => Rules[diagnosticId];
 
     internal HawthorneConfiguration WithRule(string diagnosticId, HawthorneRuleConfiguration rule) =>
-        new(Rules.SetItem(diagnosticId, rule), Exceptions, ProjectDirectory, MethodLength);
+        new(Rules.SetItem(diagnosticId, rule), Exceptions, ProjectDirectory, MethodLength, MaximumNestingDepth);
 
     internal HawthorneConfiguration WithExceptions(ImmutableArray<HawthorneException> exceptions) =>
-        new(Rules, exceptions, ProjectDirectory, MethodLength);
+        new(Rules, exceptions, ProjectDirectory, MethodLength, MaximumNestingDepth);
 
     internal HawthorneConfiguration WithMethodLength(Hawthorne105Configuration methodLength) =>
-        new(Rules, Exceptions, ProjectDirectory, methodLength);
+        new(Rules, Exceptions, ProjectDirectory, methodLength, MaximumNestingDepth);
+    internal HawthorneConfiguration WithMaximumNestingDepth(int maximum) =>
+        new(Rules, Exceptions, ProjectDirectory, MethodLength, maximum);
 
     internal static HawthorneConfiguration CreateDefaults(IEnumerable<string> diagnosticIds, string? projectDirectory = null) =>
         new(diagnosticIds.ToImmutableDictionary(
             diagnosticId => diagnosticId,
             _ => HawthorneRuleConfiguration.Default,
-            StringComparer.Ordinal), ImmutableArray<HawthorneException>.Empty, projectDirectory, Hawthorne105Configuration.Default);
+            StringComparer.Ordinal), ImmutableArray<HawthorneException>.Empty, projectDirectory, Hawthorne105Configuration.Default, 4);
 }
 
 internal sealed class Hawthorne105Configuration

@@ -7,8 +7,8 @@ the status section before stopping work.
 ## Current status
 
 - Current phase: Phase 2 — JSON configuration
-- Last completed item: central diagnostic reporting with dynamic effective severity
-- Next item: HAW105 method-length metric and analyzer
+- Last completed item: HAW105 method-length analyzer and acceptance coverage
+- Next item: HAW101 cyclomatic-complexity calculator and analyzer
 - Blockers: none
 
 ## Foundation
@@ -31,8 +31,8 @@ the status section before stopping work.
 
 ## Rules, in implementation order
 
-- [ ] HAW105 — method length, including exact executable-statement and line tests.
-- [ ] HAW103 — maximum semantic nesting depth with exact metric tests.
+- [x] HAW105 — method length, including exact executable-statement and line tests.
+- [x] HAW103 — maximum semantic nesting depth with exact metric tests.
 - [ ] HAW101 — cyclomatic complexity with all defined branch constructs counted.
 - [ ] HAW102 — cognitive complexity with exact metric tests.
 - [ ] HAW004 — hidden singleton state.

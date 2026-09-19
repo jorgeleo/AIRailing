@@ -31,6 +31,7 @@ public sealed class HawthorneAnalyzerBootstrap : DiagnosticAnalyzer
 
             var hawthorneConfiguration = configuration.Configuration!;
             HAW105MethodLengthAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
+            HAW103NestingAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             compilationStartContext.RegisterCompilationEndAction(compilationEndContext =>
             {
                 foreach (var exception in hawthorneConfiguration.Exceptions)
