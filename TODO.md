@@ -7,8 +7,8 @@ the status section before stopping work.
 ## Current status
 
 - Current phase: Phase 2 — JSON configuration
-- Last completed item: HAW004 singleton-state detection and configuration
-- Next item: HAW002 speculative factory
+- Last completed item: HAW002 speculative-factory detection and behavioral boundaries
+- Next item: HAW003 pass-through indirection
 - Blockers: none
 
 ## Foundation
@@ -36,7 +36,7 @@ the status section before stopping work.
 - [x] HAW101 — cyclomatic complexity with all defined branch constructs counted.
 - [x] HAW102 — cognitive complexity with exact metric tests.
 - [x] HAW004 — hidden singleton state.
-- [ ] HAW002 — speculative factory.
+- [x] HAW002 — speculative factory.
 - [ ] HAW003 — pass-through indirection and class-level ratio.
 - [ ] HAW104 — class coupling.
 - [ ] HAW001 — every in-compilation single-implementation interface.

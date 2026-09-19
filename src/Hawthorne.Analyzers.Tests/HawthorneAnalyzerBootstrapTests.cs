@@ -198,6 +198,33 @@ public sealed class HawthorneAnalyzerBootstrapTests
         Assert.Empty(diagnostics);
     }
 
+    [Fact]
+    public async Task Analyze_WhenFactoryOnlyConstructsOneType_ReportsHAW002()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText("class Item { } class ItemFactory { Item Create() => new Item(); }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+
+        Assert.Equal("HAW002", Assert.Single(diagnostics).Id);
+    }
+
+    [Fact]
+    public async Task Analyze_WhenFactorySelectsOrInitializes_DoesNotReportHAW002()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText("""
+                class Item { public int Value { get; set; } } class Other { }
+                class ItemFactory { object Create(bool alternate) { if (alternate) return new Other(); return new Item(); } Item CreateConfigured() => new Item { Value = 1 }; }
+                """) },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+
+        Assert.Empty(diagnostics);
+    }
+
     private sealed class TestAdditionalText(string path, string text) : AdditionalText
     {
         public override string Path { get; } = path;
