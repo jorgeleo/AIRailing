@@ -61,7 +61,8 @@ internal static class HawthorneDiagnosticDescriptors
         ConfigurationCategory,
         DiagnosticSeverity.Error,
         isEnabledByDefault: true,
-        description: "Hawthorne configuration must be valid before normal analyzer diagnostics are produced.");
+        description: "Hawthorne configuration must be valid before normal analyzer diagnostics are produced.",
+        customTags: new[] { WellKnownDiagnosticTags.CompilationEnd });
 
     internal static readonly DiagnosticDescriptor HAW901 = new(
         "HAW901",

@@ -7,8 +7,8 @@ the status section before stopping work.
 ## Current status
 
 - Current phase: Phase 2 — JSON configuration
-- Last completed item: warning-default configuration model and loader
-- Next item: connect malformed-configuration reporting to HAW900
+- Last completed item: validated JSON configuration and file-scoped exception engine
+- Next item: central diagnostic reporting with dynamic effective severity
 - Blockers: none
 
 ## Foundation
@@ -24,8 +24,8 @@ the status section before stopping work.
 
 - [x] Define immutable configuration models and warning defaults.
 - [x] Load exactly one `hawthorne.json` from `AdditionalFiles`.
-- [ ] Validate configuration and report compiler-error `HAW900` without normal analysis.
-- [ ] Implement the project-relative file-exception contract.
+- [x] Validate configuration and report compiler-error `HAW900` without normal analysis.
+- [x] Implement the project-relative file-exception contract.
 - [ ] Implement dynamic effective diagnostic severity.
 - [ ] Implement `HAW901` pragma-suppression warning.
 

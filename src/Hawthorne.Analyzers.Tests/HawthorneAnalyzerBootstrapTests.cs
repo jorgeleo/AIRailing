@@ -3,6 +3,7 @@ using Hawthorne.Analyzers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Text;
 using Xunit;
 
 namespace Hawthorne.Analyzers.Tests;
@@ -39,5 +40,61 @@ public sealed class HawthorneAnalyzerBootstrapTests
                 "HAW001", "HAW002", "HAW003", "HAW004", "HAW101", "HAW102", "HAW103", "HAW104", "HAW105", "HAW900", "HAW901",
             },
             supportedIds);
+    }
+
+    [Fact]
+    public async Task Analyze_WhenConfigurationIsMalformed_ReportsCompilerErrorHAW900AtTheConfigurationFile()
+    {
+        var compilation = CSharpCompilation.Create(
+            assemblyName: "TestAssembly",
+            syntaxTrees: new[] { CSharpSyntaxTree.ParseText("public sealed class Example { }") },
+            references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var additionalFiles = ImmutableArray.Create<AdditionalText>(
+            new TestAdditionalText("/project/hawthorne.json", "{ \"version\": \"one\" }"));
+        var options = new CompilationWithAnalyzersOptions(
+            new AnalyzerOptions(additionalFiles),
+            onAnalyzerException: null,
+            concurrentAnalysis: true,
+            logAnalyzerExecutionTime: false,
+            reportSuppressedDiagnostics: false);
+
+        var diagnostics = await compilation
+            .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), options)
+            .GetAnalyzerDiagnosticsAsync();
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("HAW900", diagnostic.Id);
+        Assert.Equal(DiagnosticSeverity.Error, diagnostic.Severity);
+        Assert.Equal("/project/hawthorne.json", diagnostic.Location.GetLineSpan().Path);
+    }
+
+    [Fact]
+    public async Task Analyze_WhenExceptionPathDoesNotMatchSource_ReportsCompilerErrorHAW900()
+    {
+        var compilation = CSharpCompilation.Create(
+            assemblyName: "TestAssembly",
+            syntaxTrees: new[] { CSharpSyntaxTree.ParseText("public sealed class Example { }", path: "/project/Present.cs") },
+            references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var additionalFiles = ImmutableArray.Create<AdditionalText>(
+            new TestAdditionalText("/project/hawthorne.json", """
+                { "version": 1, "exceptions": [{ "file": "Missing.cs", "rules": ["HAW105"], "reason": "Required." }] }
+                """));
+        var options = new CompilationWithAnalyzersOptions(new AnalyzerOptions(additionalFiles), null, true, false, false);
+
+        var diagnostics = await compilation
+            .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), options)
+            .GetAnalyzerDiagnosticsAsync();
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("HAW900", diagnostic.Id);
+        Assert.Equal(DiagnosticSeverity.Error, diagnostic.Severity);
+        Assert.Contains("does not match a source file", diagnostic.GetMessage());
+    }
+
+    private sealed class TestAdditionalText(string path, string text) : AdditionalText
+    {
+        public override string Path { get; } = path;
+
+        public override SourceText GetText(CancellationToken cancellationToken = default) => SourceText.From(text);
     }
 }

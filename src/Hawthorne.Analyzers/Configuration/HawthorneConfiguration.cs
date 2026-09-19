@@ -7,23 +7,51 @@ internal sealed class HawthorneConfiguration
 {
     internal const string FileName = "hawthorne.json";
 
-    private HawthorneConfiguration(ImmutableDictionary<string, HawthorneRuleConfiguration> rules)
+    private HawthorneConfiguration(
+        ImmutableDictionary<string, HawthorneRuleConfiguration> rules,
+        ImmutableArray<HawthorneException> exceptions,
+        string? projectDirectory)
     {
         Rules = rules;
+        Exceptions = exceptions;
+        ProjectDirectory = projectDirectory;
     }
 
     internal ImmutableDictionary<string, HawthorneRuleConfiguration> Rules { get; }
 
+    internal ImmutableArray<HawthorneException> Exceptions { get; }
+
+    internal string? ProjectDirectory { get; }
+
     internal HawthorneRuleConfiguration GetRule(string diagnosticId) => Rules[diagnosticId];
 
     internal HawthorneConfiguration WithRule(string diagnosticId, HawthorneRuleConfiguration rule) =>
-        new(Rules.SetItem(diagnosticId, rule));
+        new(Rules.SetItem(diagnosticId, rule), Exceptions, ProjectDirectory);
 
-    internal static HawthorneConfiguration CreateDefaults(IEnumerable<string> diagnosticIds) =>
+    internal HawthorneConfiguration WithExceptions(ImmutableArray<HawthorneException> exceptions) =>
+        new(Rules, exceptions, ProjectDirectory);
+
+    internal static HawthorneConfiguration CreateDefaults(IEnumerable<string> diagnosticIds, string? projectDirectory = null) =>
         new(diagnosticIds.ToImmutableDictionary(
             diagnosticId => diagnosticId,
             _ => HawthorneRuleConfiguration.Default,
-            StringComparer.Ordinal));
+            StringComparer.Ordinal), ImmutableArray<HawthorneException>.Empty, projectDirectory);
+}
+
+internal sealed class HawthorneException
+{
+    internal HawthorneException(string file, ImmutableHashSet<string> rules, string reason)
+    {
+        File = file;
+        Rules = rules;
+        Reason = reason;
+    }
+
+    internal string File { get; }
+
+    internal ImmutableHashSet<string> Rules { get; }
+
+    internal string Reason { get; }
 }
 
 internal sealed class HawthorneRuleConfiguration
@@ -43,19 +71,22 @@ internal sealed class HawthorneRuleConfiguration
 
 internal sealed class HawthorneConfigurationLoadResult
 {
-    private HawthorneConfigurationLoadResult(HawthorneConfiguration? configuration, string? errorMessage)
+    private HawthorneConfigurationLoadResult(HawthorneConfiguration? configuration, string? errorMessage, AdditionalText? source)
     {
         Configuration = configuration;
         ErrorMessage = errorMessage;
+        Source = source;
     }
 
     internal HawthorneConfiguration? Configuration { get; }
 
     internal string? ErrorMessage { get; }
 
+    internal AdditionalText? Source { get; }
+
     internal bool IsValid => Configuration is not null;
 
-    internal static HawthorneConfigurationLoadResult Valid(HawthorneConfiguration configuration) => new(configuration, null);
+    internal static HawthorneConfigurationLoadResult Valid(HawthorneConfiguration configuration, AdditionalText? source = null) => new(configuration, null, source);
 
-    internal static HawthorneConfigurationLoadResult Invalid(string errorMessage) => new(null, errorMessage);
+    internal static HawthorneConfigurationLoadResult Invalid(string errorMessage, AdditionalText? source = null) => new(null, errorMessage, source);
 }

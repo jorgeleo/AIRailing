@@ -10,7 +10,7 @@ internal static class HawthorneConfigurationLoader
     internal static HawthorneConfigurationLoadResult Load(ImmutableArray<AdditionalText> additionalFiles)
     {
         var configurationFiles = additionalFiles
-            .Where(file => string.Equals(Path.GetFileName(file.Path), HawthorneConfiguration.FileName, StringComparison.Ordinal))
+            .Where(file => string.Equals(PathNormalizer.GetFileName(file.Path), HawthorneConfiguration.FileName, StringComparison.Ordinal))
             .ToArray();
 
         if (configurationFiles.Length == 0)
@@ -20,13 +20,13 @@ internal static class HawthorneConfigurationLoader
 
         if (configurationFiles.Length > 1)
         {
-            return HawthorneConfigurationLoadResult.Invalid("Only one hawthorne.json may be supplied to a compilation.");
+            return HawthorneConfigurationLoadResult.Invalid("Only one hawthorne.json may be supplied to a compilation.", configurationFiles[0]);
         }
 
         var text = configurationFiles[0].GetText()?.ToString();
         if (text is null || string.IsNullOrWhiteSpace(text))
         {
-            return HawthorneConfigurationLoadResult.Invalid("hawthorne.json must contain a JSON object.");
+            return HawthorneConfigurationLoadResult.Invalid("hawthorne.json must contain a JSON object.", configurationFiles[0]);
         }
 
         try
@@ -35,63 +35,121 @@ internal static class HawthorneConfigurationLoader
             var root = document.RootElement;
             if (root.ValueKind != JsonValueKind.Object)
             {
-                return HawthorneConfigurationLoadResult.Invalid("hawthorne.json must contain a JSON object.");
+                return HawthorneConfigurationLoadResult.Invalid("hawthorne.json must contain a JSON object.", configurationFiles[0]);
             }
 
             if (!root.TryGetProperty("version", out var version) || version.ValueKind != JsonValueKind.Number || version.GetInt32() != 1)
             {
-                return HawthorneConfigurationLoadResult.Invalid("hawthorne.json.version must be the integer 1.");
+                return HawthorneConfigurationLoadResult.Invalid("hawthorne.json.version must be the integer 1.", configurationFiles[0]);
             }
 
-            var configuration = CreateDefaults();
+            var configuration = CreateDefaults(PathNormalizer.GetDirectory(configurationFiles[0].Path));
             if (!root.TryGetProperty("rules", out var rules))
             {
-                return HawthorneConfigurationLoadResult.Valid(configuration);
+                return LoadExceptions(root, configuration, configurationFiles[0]);
             }
 
             if (rules.ValueKind != JsonValueKind.Object)
             {
-                return HawthorneConfigurationLoadResult.Invalid("hawthorne.json.rules must be a JSON object.");
+                return HawthorneConfigurationLoadResult.Invalid("hawthorne.json.rules must be a JSON object.", configurationFiles[0]);
             }
 
             foreach (var rule in rules.EnumerateObject())
             {
                 if (!configuration.Rules.ContainsKey(rule.Name))
                 {
-                    return HawthorneConfigurationLoadResult.Invalid($"hawthorne.json.rules contains unknown rule '{rule.Name}'.");
+                    return HawthorneConfigurationLoadResult.Invalid($"hawthorne.json.rules contains unknown rule '{rule.Name}'.", configurationFiles[0]);
                 }
 
                 if (rule.Value.ValueKind != JsonValueKind.Object)
                 {
-                    return HawthorneConfigurationLoadResult.Invalid($"hawthorne.json.rules.{rule.Name} must be a JSON object.");
+                    return HawthorneConfigurationLoadResult.Invalid($"hawthorne.json.rules.{rule.Name} must be a JSON object.", configurationFiles[0]);
                 }
 
                 var defaultRule = configuration.GetRule(rule.Name);
                 var enabled = GetEnabled(rule.Name, rule.Value, defaultRule.IsEnabled, out var enabledError);
                 if (enabledError is not null)
                 {
-                    return HawthorneConfigurationLoadResult.Invalid(enabledError);
+                    return HawthorneConfigurationLoadResult.Invalid(enabledError, configurationFiles[0]);
                 }
 
                 var severity = GetSeverity(rule.Name, rule.Value, defaultRule.Severity, out var severityError);
                 if (severityError is not null)
                 {
-                    return HawthorneConfigurationLoadResult.Invalid(severityError);
+                    return HawthorneConfigurationLoadResult.Invalid(severityError, configurationFiles[0]);
                 }
 
                 configuration = configuration.WithRule(rule.Name, new HawthorneRuleConfiguration(enabled, severity));
             }
 
-            return HawthorneConfigurationLoadResult.Valid(configuration);
+            return LoadExceptions(root, configuration, configurationFiles[0]);
         }
-        catch (JsonException exception)
+        catch (Exception exception) when (exception is JsonException or FormatException)
         {
-            return HawthorneConfigurationLoadResult.Invalid($"hawthorne.json is not valid JSON: {exception.Message}");
+            return HawthorneConfigurationLoadResult.Invalid($"hawthorne.json is not valid JSON: {exception.Message}", configurationFiles[0]);
         }
     }
 
-    private static HawthorneConfiguration CreateDefaults() =>
-        HawthorneConfiguration.CreateDefaults(HawthorneDiagnosticDescriptors.All.Select(descriptor => descriptor.Id));
+    private static HawthorneConfiguration CreateDefaults(string? projectDirectory = null) =>
+        HawthorneConfiguration.CreateDefaults(HawthorneDiagnosticDescriptors.All.Select(descriptor => descriptor.Id), projectDirectory);
+
+    private static HawthorneConfigurationLoadResult LoadExceptions(
+        JsonElement root,
+        HawthorneConfiguration configuration,
+        AdditionalText configurationFile)
+    {
+        if (!root.TryGetProperty("exceptions", out var exceptions))
+        {
+            return HawthorneConfigurationLoadResult.Valid(configuration, configurationFile);
+        }
+
+        if (exceptions.ValueKind != JsonValueKind.Array)
+        {
+            return HawthorneConfigurationLoadResult.Invalid("hawthorne.json.exceptions must be an array.", configurationFile);
+        }
+
+        if (configuration.ProjectDirectory is null)
+        {
+            return HawthorneConfigurationLoadResult.Invalid("hawthorne.json must have a project-directory path when exceptions are configured.", configurationFile);
+        }
+
+        var builder = ImmutableArray.CreateBuilder<HawthorneException>();
+        foreach (var exception in exceptions.EnumerateArray())
+        {
+            if (exception.ValueKind != JsonValueKind.Object ||
+                !exception.TryGetProperty("file", out var file) || file.ValueKind != JsonValueKind.String ||
+                !PathNormalizer.TryNormalizeProjectRelativePath(file.GetString() ?? string.Empty, out var normalizedFile) ||
+                normalizedFile.Contains('*') || normalizedFile.Contains('?'))
+            {
+                return HawthorneConfigurationLoadResult.Invalid("Each exception file must be a non-wildcard project-relative path.", configurationFile);
+            }
+
+            if (!exception.TryGetProperty("reason", out var reason) || reason.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(reason.GetString()))
+            {
+                return HawthorneConfigurationLoadResult.Invalid($"Exception '{normalizedFile}' must contain a non-empty reason.", configurationFile);
+            }
+
+            if (!exception.TryGetProperty("rules", out var rules) || rules.ValueKind != JsonValueKind.Array || rules.GetArrayLength() == 0)
+            {
+                return HawthorneConfigurationLoadResult.Invalid($"Exception '{normalizedFile}' must name one or more rules.", configurationFile);
+            }
+
+            var ruleIds = ImmutableHashSet.CreateBuilder<string>(StringComparer.Ordinal);
+            foreach (var rule in rules.EnumerateArray())
+            {
+                if (rule.ValueKind != JsonValueKind.String || rule.GetString() is not { } ruleId || !configuration.Rules.ContainsKey(ruleId))
+                {
+                    return HawthorneConfigurationLoadResult.Invalid($"Exception '{normalizedFile}' contains an unknown rule.", configurationFile);
+                }
+
+                ruleIds.Add(ruleId);
+            }
+
+            builder.Add(new HawthorneException(normalizedFile, ruleIds.ToImmutable(), reason.GetString()!));
+        }
+
+        return HawthorneConfigurationLoadResult.Valid(configuration.WithExceptions(builder.ToImmutable()), configurationFile);
+    }
 
     private static bool GetEnabled(string ruleId, JsonElement rule, bool defaultValue, out string? errorMessage)
     {
