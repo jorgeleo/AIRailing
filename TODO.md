@@ -18,7 +18,6 @@ the status section before stopping work.
 - [x] Create the `Hawthorne.Analyzers.Tests` .NET 10 test project.
 - [x] Add central descriptor catalog and analyzer bootstrap.
 - [x] Prove analyzer-test execution with a focused test.
-- [ ] Add a sample consumer and package-consumption build test.
 
 ## Shared configuration and governance
 
@@ -27,7 +26,6 @@ the status section before stopping work.
 - [x] Validate configuration and report compiler-error `HAW900` without normal analysis.
 - [x] Implement the project-relative file-exception contract.
 - [x] Implement dynamic effective diagnostic severity.
-- [ ] Implement `HAW901` pragma-suppression warning.
 
 ## Rules, in implementation order
 
@@ -41,9 +39,22 @@ the status section before stopping work.
 - [x] HAW104 — class coupling.
 - [x] HAW001 — every in-compilation single-implementation interface.
 
+## Remaining implementation work
+
+- [ ] Add a sample consumer and package-consumption build test.
+- [ ] Implement `HAW901` pragma-suppression warning.
+- [ ] Add rule documentation and configuration documentation.
+
+## User-owned completion items
+
+- [ ] Choose final NuGet package identity, versioning, license, repository URL, and documentation/help-link base URL.
+- [ ] Commit and manage the Git repository history.
+- [ ] Choose and configure the CI provider, including any package-feed credentials.
+- [ ] Provide or approve the real repositories used for architecture-rule calibration, then review the recorded false-positive results.
+- [ ] Perform final Visual Studio and Visual Studio Code consumption checks on the intended development environments.
+
 ## Release readiness
 
-- [ ] Add rule documentation and configuration documentation.
 - [ ] Calibrate architecture diagnostics against real repositories.
 - [ ] Add NuGet packaging metadata and package validation.
 - [ ] Add CI build/test gate.
