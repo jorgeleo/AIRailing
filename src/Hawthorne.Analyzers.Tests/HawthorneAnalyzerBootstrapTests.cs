@@ -287,6 +287,17 @@ public sealed class HawthorneAnalyzerBootstrapTests
         Assert.Equal("HAW001", Assert.Single(diagnostics).Id);
     }
 
+    [Fact]
+    public async Task Analyze_WhenInterfaceHasMultipleConcreteImplementations_DoesNotReportHAW001()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly", new[] { CSharpSyntaxTree.ParseText("interface IWorker { } class FirstWorker : IWorker { } class SecondWorker : IWorker { }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+
+        Assert.Empty(diagnostics);
+    }
+
     private sealed class TestAdditionalText(string path, string text) : AdditionalText
     {
         public override string Path { get; } = path;
