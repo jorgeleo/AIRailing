@@ -341,6 +341,85 @@ public sealed class HawthorneAnalyzerBootstrapTests
     }
 
     [Fact]
+    public async Task Analyze_WhenCouplingExceedsConfiguredMaximum_ReportsDependencyCategories()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText("""
+                class ApiRequest { }
+                class ApiResponse { }
+                class FieldDependency { }
+                class ConstructorDependency { }
+                class LocalDependency { }
+                class CreatedDependency { }
+                class InvokedDependency { public void Run() { } }
+                class Host
+                {
+                    private FieldDependency field;
+                    public Host(ConstructorDependency dependency) { }
+                    public ApiResponse Handle(ApiRequest request)
+                    {
+                        var local = new LocalDependency();
+                        var created = new CreatedDependency();
+                        new InvokedDependency().Run();
+                        return default;
+                    }
+                }
+                """) },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var options = new CompilationWithAnalyzersOptions(new AnalyzerOptions(ImmutableArray.Create<AdditionalText>(
+            new TestAdditionalText("/project/hawthorne.json", "{ \"version\": 1, \"rules\": { \"HAW104\": { \"maximum\": 6 } } }"))), null, true, false, false);
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), options).GetAnalyzerDiagnosticsAsync();
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("HAW104", diagnostic.Id);
+        Assert.Contains("API surface: 2; state/dependency: 2; implementation: 3", diagnostic.GetMessage());
+    }
+
+    [Fact]
+    public async Task Analyze_WhenTypeIsUsedByMultipleSources_CountsItOnceOverall()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText("""
+                class Shared { }
+                class Other { }
+                class Host
+                {
+                    private Shared field;
+                    public Host(Shared dependency) { }
+                    public Other Get(Shared request)
+                    {
+                        var local = new Shared();
+                        return new Other();
+                    }
+                }
+                """) },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var options = new CompilationWithAnalyzersOptions(new AnalyzerOptions(ImmutableArray.Create<AdditionalText>(
+            new TestAdditionalText("/project/hawthorne.json", "{ \"version\": 1, \"rules\": { \"HAW104\": { \"maximum\": 1 } } }"))), null, true, false, false);
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), options).GetAnalyzerDiagnosticsAsync();
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("HAW104", diagnostic.Id);
+        Assert.Contains("depends on 2 distinct external types", diagnostic.GetMessage());
+        Assert.Contains("API surface: 2; state/dependency: 1; implementation: 2", diagnostic.GetMessage());
+    }
+
+    [Fact]
+    public async Task Analyze_WhenClassMeetsCouplingMaximum_DoesNotReportHAW104()
+    {
+        var types = string.Concat(Enumerable.Range(1, 12).Select(index => $"class T{index} {{ }}"));
+        var fields = string.Concat(Enumerable.Range(1, 12).Select(index => $"T{index} f{index};"));
+        var compilation = CSharpCompilation.Create("TestAssembly", new[] { CSharpSyntaxTree.ParseText(types + "class Host {" + fields + "}") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
     public async Task Analyze_WhenGenericDependencyExceedsConfiguredMaximum_ReportsTheTypeArgument()
     {
         var compilation = CSharpCompilation.Create("TestAssembly",

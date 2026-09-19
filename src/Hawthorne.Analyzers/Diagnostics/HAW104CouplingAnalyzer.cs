@@ -1,3 +1,4 @@
+using Hawthorne.Analyzers.Analysis.Coupling;
 using Hawthorne.Analyzers.Configuration;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -13,17 +14,21 @@ internal static class HAW104CouplingAnalyzer
     private static void Analyze(INamedTypeSymbol type, SymbolAnalysisContext context, HawthorneConfiguration configuration)
     {
         if (type.TypeKind != TypeKind.Class) return;
-        var dependencies = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
-        Add(type.BaseType, type, dependencies);
-        foreach (var item in type.Interfaces) Add(item, type, dependencies);
+        var dependencies = new CouplingInventory();
+        dependencies.Add(type.BaseType, type, CouplingSource.ApiSurface);
+        foreach (var item in type.Interfaces) dependencies.Add(item, type, CouplingSource.ApiSurface);
         foreach (var member in type.GetMembers())
         {
-            if (member is IFieldSymbol field) Add(field.Type, type, dependencies);
-            if (member is IPropertySymbol property) Add(property.Type, type, dependencies);
+            if (member is IFieldSymbol field) dependencies.Add(field.Type, type, CouplingSource.StateOrDependency);
+            if (member is IPropertySymbol property)
+                dependencies.Add(property.Type, type, IsApiSurface(property) ? CouplingSource.ApiSurface : CouplingSource.StateOrDependency);
             if (member is IMethodSymbol method)
             {
-                Add(method.ReturnType, type, dependencies);
-                foreach (var parameter in method.Parameters) Add(parameter.Type, type, dependencies);
+                var source = method.MethodKind == MethodKind.Constructor
+                    ? CouplingSource.StateOrDependency
+                    : IsApiSurface(method) ? CouplingSource.ApiSurface : CouplingSource.Implementation;
+                dependencies.Add(method.ReturnType, type, source);
+                foreach (var parameter in method.Parameters) dependencies.Add(parameter.Type, type, source);
             }
         }
 
@@ -42,29 +47,22 @@ internal static class HAW104CouplingAnalyzer
         {
             var diagnostic = DiagnosticReportingExtensions.CreateHawthorneDiagnostic(HawthorneDiagnosticDescriptors.HAW104,
                 type.Locations.FirstOrDefault() ?? Location.None, configuration, type.Name, dependencies.Count, configuration.MaximumClassCoupling,
-                string.Join(", ", dependencies
-                    .OrderBy(dependency => dependency.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat), StringComparer.Ordinal)
-                    .Take(5)
-                    .Select(dependency => dependency.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat))));
+                dependencies.CountBySource(CouplingSource.ApiSurface),
+                dependencies.CountBySource(CouplingSource.StateOrDependency),
+                dependencies.CountBySource(CouplingSource.Implementation),
+                dependencies.FormatExamples());
             if (diagnostic is not null) context.ReportDiagnostic(diagnostic);
         }
     }
 
-    private static void CollectOperations(IOperation operation, INamedTypeSymbol owner, HashSet<INamedTypeSymbol> dependencies)
-    {
-        if (operation is IObjectCreationOperation creation) Add(creation.Type, owner, dependencies);
-        if (operation is IInvocationOperation invocation) Add(invocation.TargetMethod.ContainingType, owner, dependencies);
-        if (operation is IVariableDeclaratorOperation local) Add(local.Symbol.Type, owner, dependencies);
-        foreach (var child in operation.ChildOperations) CollectOperations(child, owner, dependencies);
-    }
+    private static bool IsApiSurface(ISymbol member) =>
+        member.DeclaredAccessibility is Accessibility.Public or Accessibility.Protected or Accessibility.ProtectedOrInternal;
 
-    private static void Add(ITypeSymbol? symbol, INamedTypeSymbol owner, HashSet<INamedTypeSymbol> dependencies)
+    private static void CollectOperations(IOperation operation, INamedTypeSymbol owner, CouplingInventory dependencies)
     {
-        if (symbol is not INamedTypeSymbol named || SymbolEqualityComparer.Default.Equals(named, owner) || named.SpecialType != SpecialType.None) return;
-        if (named.IsGenericType)
-            foreach (var argument in named.TypeArguments) Add(argument, owner, dependencies);
-        if (named.Name is "Task" or "ValueTask" or "List" or "IEnumerable" or "ICollection" or "Dictionary" or "Nullable")
-            return;
-        else dependencies.Add(named);
+        if (operation is IObjectCreationOperation creation) dependencies.Add(creation.Type, owner, CouplingSource.Implementation);
+        if (operation is IInvocationOperation invocation) dependencies.Add(invocation.TargetMethod.ContainingType, owner, CouplingSource.Implementation);
+        if (operation is IVariableDeclaratorOperation local) dependencies.Add(local.Symbol.Type, owner, CouplingSource.Implementation);
+        foreach (var child in operation.ChildOperations) CollectOperations(child, owner, dependencies);
     }
 }

@@ -47,7 +47,7 @@ internal static class HawthorneDiagnosticDescriptors
     internal static readonly DiagnosticDescriptor HAW104 = CreateComplexityWarning(
         "HAW104",
         "Class coupling",
-        "Type '{0}' depends on {1} distinct external types; maximum allowed is {2}. Examples: {3}. Split responsibilities or introduce a focused boundary.");
+        "Type '{0}' depends on {1} distinct external types; maximum allowed is {2}. API surface: {3}; state/dependency: {4}; implementation: {5}. Examples: {6}. Split responsibilities or introduce a focused boundary.");
 
     internal static readonly DiagnosticDescriptor HAW105 = CreateComplexityWarning(
         "HAW105",

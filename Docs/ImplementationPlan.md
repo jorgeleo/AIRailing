@@ -1001,13 +1001,19 @@ Collect types from:
 - Generic type arguments.
 - Local variables where relevant.
 
-Use a:
+Use a semantic inventory keyed by:
 
 ```csharp
-HashSet<INamedTypeSymbol>
+INamedTypeSymbol
 ```
 
-with symbol equality.
+with symbol equality. Record one or more origins for each type:
+
+- API surface: base type, interfaces, and public/protected signatures.
+- State/dependency: fields, properties, and constructor parameters.
+- Implementation: private/internal signatures, object creation, invocations, and local variables.
+
+A type used by multiple origins counts once toward the threshold and once in every applicable origin category.
 
 ---
 
@@ -1054,7 +1060,11 @@ Do not hard-code an enormous list initially. Build a clear helper that can evolv
 
 ```text
 Type '{0}' depends on {1} distinct external types; maximum allowed is {2}.
+API surface: {3}; state/dependency: {4}; implementation: {5}.
+Examples: {6}.
 ```
+
+The threshold continues to use the distinct-type total. Categories explain the result; they do not change the trigger or configuration semantics.
 
 ---
 
