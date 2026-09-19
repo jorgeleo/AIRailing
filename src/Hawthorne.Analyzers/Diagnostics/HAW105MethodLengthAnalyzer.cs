@@ -22,7 +22,7 @@ internal static class HAW105MethodLengthAnalyzer
         if (statements > configuration.MethodLength.MaximumExecutableStatements)
         {
             context.ReportHawthorneDiagnostic(HawthorneDiagnosticDescriptors.HAW105, method.Identifier.GetLocation(), configuration,
-                $"Method '{method.Identifier.ValueText}' contains {statements} executable statements; maximum allowed is {configuration.MethodLength.MaximumExecutableStatements}");
+                $"Method '{method.Identifier.ValueText}' contains {statements} executable statements; maximum allowed is {configuration.MethodLength.MaximumExecutableStatements}. Split the method into focused operations.");
             return;
         }
 
@@ -30,7 +30,7 @@ internal static class HAW105MethodLengthAnalyzer
         if (lines > configuration.MethodLength.MaximumPhysicalLines)
         {
             context.ReportHawthorneDiagnostic(HawthorneDiagnosticDescriptors.HAW105, method.Identifier.GetLocation(), configuration,
-                $"Method '{method.Identifier.ValueText}' spans {lines} physical lines; maximum allowed is {configuration.MethodLength.MaximumPhysicalLines}");
+                $"Method '{method.Identifier.ValueText}' spans {lines} physical lines; maximum allowed is {configuration.MethodLength.MaximumPhysicalLines}. Split the method into focused operations.");
         }
     }
 }

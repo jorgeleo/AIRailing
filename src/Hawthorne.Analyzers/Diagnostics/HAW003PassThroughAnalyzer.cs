@@ -17,14 +17,14 @@ internal static class HAW003PassThroughAnalyzer
         if (forwarding.Length >= 3 && forwarding.Length / (double)methods.Length >= 0.80)
         {
             context.ReportHawthorneDiagnostic(HawthorneDiagnosticDescriptors.HAW003, type.Identifier.GetLocation(), configuration,
-                $"Type '{type.Identifier.ValueText}' forwards {forwarding.Length / (double)methods.Length:P0} of its eligible methods without adding behavior");
+                $"Type '{type.Identifier.ValueText}' forwards {forwarding.Length / (double)methods.Length:P0} of its eligible methods without adding behavior. Remove or collapse the forwarding layer.");
             return;
         }
 
         foreach (var method in forwarding)
         {
             context.ReportHawthorneDiagnostic(HawthorneDiagnosticDescriptors.HAW003, method.Identifier.GetLocation(), configuration,
-                $"Method '{method.Identifier.ValueText}' only forwards its arguments without adding behavior");
+                $"Method '{method.Identifier.ValueText}' only forwards its arguments without adding behavior. Remove the method or add the responsibility that justifies it.");
         }
     }
 

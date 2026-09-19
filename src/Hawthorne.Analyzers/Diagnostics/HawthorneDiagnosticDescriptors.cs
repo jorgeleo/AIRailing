@@ -12,52 +12,52 @@ internal static class HawthorneDiagnosticDescriptors
     internal static readonly DiagnosticDescriptor HAW001 = CreateArchitectureWarning(
         "HAW001",
         "Redundant abstraction",
-        "Interface '{0}' has exactly one detected implementation, '{1}'");
+        "Interface '{0}' has exactly one detected implementation, '{1}'. Remove the interface or add a demonstrated alternative implementation.");
 
     internal static readonly DiagnosticDescriptor HAW002 = CreateArchitectureWarning(
         "HAW002",
         "Speculative factory",
-        "Factory '{0}' always constructs '{1}' and performs no meaningful selection, configuration, or lifecycle behavior");
+        "Factory '{0}' always constructs '{1}' and performs no meaningful selection, configuration, or lifecycle behavior. Instantiate '{1}' directly or add the responsibility that justifies a factory.");
 
     internal static readonly DiagnosticDescriptor HAW003 = CreateArchitectureWarning(
         "HAW003",
         "Pass-through indirection",
-        "Pass-through indirection detected: {0}");
+        "Pass-through indirection detected: {0}. Remove the forwarding layer or add behavior that justifies it.");
 
     internal static readonly DiagnosticDescriptor HAW004 = CreateArchitectureWarning(
         "HAW004",
         "Hidden singleton state",
-        "Type '{0}' exposes a static shared instance and contains mutable state");
+        "Type '{0}' exposes a static shared instance and contains mutable state. Use dependency injection with an explicit service lifetime instead.");
 
     internal static readonly DiagnosticDescriptor HAW101 = CreateComplexityWarning(
         "HAW101",
         "Cyclomatic complexity",
-        "Method '{0}' has cyclomatic complexity {1}; maximum allowed is {2}");
+        "Method '{0}' has cyclomatic complexity {1}; maximum allowed is {2}. Split branches into smaller methods or simplify the control flow.");
 
     internal static readonly DiagnosticDescriptor HAW102 = CreateComplexityWarning(
         "HAW102",
         "Cognitive complexity",
-        "Method '{0}' has cognitive complexity {1}; maximum allowed is {2}");
+        "Method '{0}' has cognitive complexity {1}; maximum allowed is {2}. Flatten nesting or extract a focused method.");
 
     internal static readonly DiagnosticDescriptor HAW103 = CreateComplexityWarning(
         "HAW103",
         "Maximum nesting depth",
-        "Method '{0}' reaches nesting depth {1}; maximum allowed is {2}");
+        "Method '{0}' reaches nesting depth {1}; maximum allowed is {2}. Use guard clauses or extract the nested work.");
 
     internal static readonly DiagnosticDescriptor HAW104 = CreateComplexityWarning(
         "HAW104",
         "Class coupling",
-        "Type '{0}' depends on {1} distinct external types; maximum allowed is {2}");
+        "Type '{0}' depends on {1} distinct external types; maximum allowed is {2}. Split responsibilities or introduce a focused boundary.");
 
     internal static readonly DiagnosticDescriptor HAW105 = CreateComplexityWarning(
         "HAW105",
         "Method length",
-        "Method length exceeds the configured limit: {0}");
+        "Method length exceeds the configured limit: {0}. Split the method into focused operations.");
 
     internal static readonly DiagnosticDescriptor HAW900 = new(
         "HAW900",
         "Invalid Hawthorne configuration",
-        "Invalid configuration: {0}",
+        "Invalid configuration: {0}. Correct hawthorne.json before running normal Hawthorne analysis.",
         ConfigurationCategory,
         DiagnosticSeverity.Error,
         isEnabledByDefault: true,

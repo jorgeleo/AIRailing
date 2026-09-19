@@ -48,8 +48,8 @@ the status section before stopping work.
 ## User-owned completion items
 
 - [ ] Choose final NuGet package identity, versioning, license, repository URL, and documentation/help-link base URL.
-- [ ] Commit and manage the Git repository history.
-- [ ] Choose and configure the CI provider, including any package-feed credentials.
+- [x] Commit and manage the Git repository history.
+- [x] Choose and configure the CI provider, including any package-feed credentials.
 - [ ] Provide or approve the real repositories used for architecture-rule calibration, then review the recorded false-positive results.
 - [ ] Perform final Visual Studio and Visual Studio Code consumption checks on the intended development environments.
 
