@@ -7,8 +7,8 @@ the status section before stopping work.
 ## Current status
 
 - Current phase: Phase 2 — JSON configuration
-- Last completed item: HAW002 speculative-factory detection and behavioral boundaries
-- Next item: HAW003 pass-through indirection
+- Last completed item: HAW003 direct forwarding and class-ratio diagnostic behavior
+- Next item: add async-forwarding support, then begin HAW104
 - Blockers: none
 
 ## Foundation
@@ -37,7 +37,7 @@ the status section before stopping work.
 - [x] HAW102 — cognitive complexity with exact metric tests.
 - [x] HAW004 — hidden singleton state.
 - [x] HAW002 — speculative factory.
-- [ ] HAW003 — pass-through indirection and class-level ratio.
+- [ ] HAW003 — direct, transformed-argument, and class-ratio behavior implemented; async forwarding remains.
 - [ ] HAW104 — class coupling.
 - [ ] HAW001 — every in-compilation single-implementation interface.
 

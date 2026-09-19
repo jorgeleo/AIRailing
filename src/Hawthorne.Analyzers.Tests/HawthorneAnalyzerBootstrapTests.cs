@@ -225,6 +225,38 @@ public sealed class HawthorneAnalyzerBootstrapTests
         Assert.Empty(diagnostics);
     }
 
+    [Fact]
+    public async Task Analyze_WhenMethodOnlyForwardsArguments_ReportsHAW003()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText("class Service { public int Get(int value) => value; } class Facade { private readonly Service service = new Service(); int Get(int value) => service.Get(value); }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+        Assert.Equal("HAW003", Assert.Single(diagnostics).Id);
+    }
+
+    [Fact]
+    public async Task Analyze_WhenMethodTransformsAnArgument_DoesNotReportHAW003()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText("class Service { public int Get(int value) => value; } class Facade { private readonly Service service = new Service(); int Get(int value) => service.Get(value + 1); }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Analyze_WhenTypeMeetsForwardingRatio_ReportsOneTypeLevelHAW003()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText("class Service { public int A(int v) => v; public int B(int v) => v; public int C(int v) => v; } class Facade { private readonly Service s = new Service(); int A(int v) => s.A(v); int B(int v) => s.B(v); int C(int v) => s.C(v); }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("HAW003", diagnostic.Id);
+        Assert.Equal("Facade", diagnostic.Location.SourceTree!.GetRoot().FindToken(diagnostic.Location.SourceSpan.Start).ValueText);
+    }
+
     private sealed class TestAdditionalText(string path, string text) : AdditionalText
     {
         public override string Path { get; } = path;
