@@ -108,6 +108,12 @@ internal static class HawthorneConfigurationLoader
                     if (error is not null) return HawthorneConfigurationLoadResult.Invalid(error.Replace("HAW105", "HAW102"), configurationFiles[0]);
                     configuration = configuration.WithMaximumCognitiveComplexity(maximum);
                 }
+                if (rule.Name == "HAW004" && rule.Value.TryGetProperty("requireMutableState", out var mutableState))
+                {
+                    if (mutableState.ValueKind is not JsonValueKind.True and not JsonValueKind.False)
+                        return HawthorneConfigurationLoadResult.Invalid("hawthorne.json.rules.HAW004.requireMutableState must be a boolean.", configurationFiles[0]);
+                    configuration = configuration.WithRequireMutableSingletonState(mutableState.GetBoolean());
+                }
             }
 
             return LoadExceptions(root, configuration, configurationFiles[0]);

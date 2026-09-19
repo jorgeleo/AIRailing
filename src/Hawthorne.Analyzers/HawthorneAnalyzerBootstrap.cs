@@ -34,6 +34,7 @@ public sealed class HawthorneAnalyzerBootstrap : DiagnosticAnalyzer
             HAW103NestingAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW101CyclomaticComplexityAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW102CognitiveComplexityAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
+            HAW004SingletonAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             compilationStartContext.RegisterCompilationEndAction(compilationEndContext =>
             {
                 foreach (var exception in hawthorneConfiguration.Exceptions)

@@ -174,6 +174,30 @@ public sealed class HawthorneAnalyzerBootstrapTests
         Assert.Equal("HAW102", Assert.Single(diagnostics).Id);
     }
 
+    [Fact]
+    public async Task Analyze_WhenStaticSelfInstanceHasMutableState_ReportsHAW004()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText("class State { public static State Instance { get; } = new State(); public int Value { get; set; } }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+
+        Assert.Equal("HAW004", Assert.Single(diagnostics).Id);
+    }
+
+    [Fact]
+    public async Task Analyze_WhenStaticSelfInstanceIsImmutable_DoesNotReportHAW004ByDefault()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText("class Value { public static Value Instance { get; } = new Value(); }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+
+        Assert.Empty(diagnostics);
+    }
+
     private sealed class TestAdditionalText(string path, string text) : AdditionalText
     {
         public override string Path { get; } = path;
