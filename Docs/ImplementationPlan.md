@@ -12,11 +12,11 @@ The analyzer is intentionally opinionated. Its primary goal is not formatting or
 
 The analyzer must be suitable for use in:
 
-- Human-written C# projects.
+- Human-written C# projects built with .NET 10.
 - AI-assisted development.
 - Autonomous or semi-autonomous coding harnesses.
 - CI/CD quality gates.
-- Local builds and IDE feedback.
+- Local builds and IDE feedback in Visual Studio and Visual Studio Code.
 
 The analyzer should report configured violations as Roslyn diagnostics and allow projects to promote those diagnostics to build errors.
 
@@ -156,47 +156,46 @@ Rules `HAW101` through `HAW105` target structural complexity.
   "rules": {
     "HAW001": {
       "enabled": true,
-      "severity": "error",
-      "minimumConfidence": 7
+      "severity": "warning"
     },
     "HAW002": {
       "enabled": true,
-      "severity": "error"
+      "severity": "warning"
     },
     "HAW003": {
       "enabled": true,
-      "severity": "error",
+      "severity": "warning",
       "forwardingRatio": 0.80,
       "minimumForwardingMethods": 3
     },
     "HAW004": {
       "enabled": true,
-      "severity": "error",
+      "severity": "warning",
       "requireMutableState": true
     },
     "HAW101": {
       "enabled": true,
-      "severity": "error",
+      "severity": "warning",
       "maximum": 10
     },
     "HAW102": {
       "enabled": true,
-      "severity": "error",
+      "severity": "warning",
       "maximum": 15
     },
     "HAW103": {
       "enabled": true,
-      "severity": "error",
+      "severity": "warning",
       "maximum": 4
     },
     "HAW104": {
       "enabled": true,
-      "severity": "error",
+      "severity": "warning",
       "maximum": 12
     },
     "HAW105": {
       "enabled": true,
-      "severity": "error",
+      "severity": "warning",
       "maximumExecutableStatements": 30,
       "maximumPhysicalLines": 50
     }
@@ -272,6 +271,8 @@ Responsibilities:
 6. Return immutable configuration objects.
 7. Fall back to built-in defaults when configuration is absent.
 8. Produce a configuration diagnostic when the file is malformed.
+9. When configuration is malformed, report `HAW900` as a compiler error and
+   perform no normal Hawthorne rule analysis for that compilation.
 
 Recommended diagnostic:
 
@@ -301,6 +302,17 @@ Normalize paths by:
 3. Resolving paths relative to the project root when possible.
 4. Comparing with the appropriate platform-independent normalization strategy.
 5. Avoiding dependence on absolute machine-specific paths.
+
+The v1 path contract is:
+
+1. `hawthorne.json` must be beside the consuming `.csproj` file.
+2. An exception `file` value is a project-relative path written with `/`.
+3. Comparisons are ordinal and case-sensitive on every platform.
+4. Linked source files outside the project directory cannot use file exceptions
+   in v1.
+5. Supplying more than one `hawthorne.json` to a compilation is `HAW900`.
+6. An exception path that does not match a source file is `HAW900` so stale
+   exceptions remain visible.
 
 Preferred configuration format:
 
@@ -530,48 +542,18 @@ At compilation completion, evaluate interfaces with exactly one concrete impleme
 
 ---
 
-## 8.3 Confidence model
+## 8.3 First-pass policy
 
-Do not flag every one-implementation interface.
+Report every interface with exactly one concrete implementation in the current
+compilation. The diagnostic is a warning by default.
 
-Assign confidence points.
+This initial rule intentionally does not infer construction sites, DI
+registrations, external consumers, or implementations outside the current
+compilation. Projects can configure an error severity after local calibration.
 
-Suggested model:
-
-```text
-+2 exactly one implementation in compilation
-+2 interface and implementation in same assembly
-+1 interface and implementation in same namespace
-+1 names match IThing / Thing
-+1 implementation is sealed
-+1 interface has no default implementation behavior
-+1 all known construction sites instantiate the same implementation
-+1 only one DI registration binds the interface
-```
-
-Potential suppression signals:
-
-```text
-- external/public plugin boundary
-- COM/export contract
-- interface referenced by generated code contract
-- assembly explicitly designed as abstraction package
-- multiple implementations appear in test compilation
-- marker interface
-- default interface implementation contains meaningful behavior
-```
-
-Report only when:
-
-```text
-confidence >= configured minimumConfidence
-```
-
-Default:
-
-```text
-7
-```
+Future versions may add confidence scoring and architectural-boundary heuristics,
+but those must not change the deterministic v1 criterion without a documented
+rule-versioning decision.
 
 ---
 
@@ -864,7 +846,11 @@ Initial set:
 - `case` with executable path
 - `catch`
 - conditional operator
-- optionally logical short-circuit branches
+- logical `&&` and `||` operators
+- null-coalescing `??` expressions
+
+All listed branch constructs are counted. Short-circuit operators are not
+optional or configurable in v1, so metric tests have one deterministic score.
 
 ---
 
@@ -1180,17 +1166,13 @@ hidden
 
 However, Roslyn diagnostic descriptors have static default severity semantics.
 
-Implementation must determine the best Roslyn-compatible strategy for dynamic configured severity.
+Descriptors default to `warning`. The analyzer must dynamically apply the
+configured effective severity when it reports a diagnostic, using a
+Roslyn-compatible reporting API. This behavior is covered by analyzer tests for
+every supported severity.
 
-Preferred design options, in priority order:
-
-1. Separate descriptor instances per supported severity.
-2. Apply project-level Roslyn severity configuration generated or mapped from Hawthorne configuration if required.
-3. Keep descriptor default at warning and document build-error promotion mechanism.
-
-The implementation should avoid unsupported assumptions about mutating severity dynamically at reporting time.
-
-Because the product goal is build gating, ensure the final integration allows Hawthorne violations configured as errors to fail the build.
+Because the product goal is build gating, a project can set a rule to `error` in
+`hawthorne.json`; the resulting effective error must fail `dotnet build`.
 
 ---
 
@@ -1215,7 +1197,7 @@ The analyzer cannot necessarily prevent the compiler infrastructure from honorin
 - All officially supported exemptions must live in `hawthorne.json`.
 - CI guidance should treat source-level suppression of `HAW*` diagnostics as prohibited repository policy if the host compiler permits it.
 
-Optionally create a future companion rule that scans source text for:
+Create a companion rule that scans source text for:
 
 ```text
 #pragma warning disable HAW
@@ -1229,7 +1211,9 @@ Potential diagnostic:
 HAW901 — Hawthorne pragma suppression is not permitted
 ```
 
-This is recommended for the first release if technically reliable.
+`HAW901` is a warning. It reports whenever a pragma attempts to suppress one or
+more `HAW*` diagnostics. Pragmas for unrelated compiler or analyzer diagnostics
+are ignored.
 
 ---
 
@@ -1260,7 +1244,7 @@ Test:
 - One interface / one implementation / no polymorphism -> violation.
 - One interface / two implementations -> no violation.
 - One interface / one implementation but configured file exception -> no violation.
-- Interface with external-boundary evidence -> no violation where heuristic supports it.
+- Public or external-boundary interfaces with one in-compilation implementation -> violation.
 - Matching and non-matching interface/class naming.
 - Generic interfaces.
 - Nested classes.
@@ -1604,14 +1588,11 @@ Acceptance criteria:
 
 - Obvious `IFoo/Foo` single-implementation wrappers are detected.
 - Multiple implementations suppress rule.
-- Configured confidence threshold works.
-- Known architectural boundary patterns avoid obvious false positives.
+- Every single-implementation interface in the current compilation is reported.
 
 ---
 
 ## Phase 13 — Anti-pragma enforcement
-
-Recommended for first production release.
 
 Implement:
 
@@ -1634,7 +1615,7 @@ Add a documented file-scoped exception to hawthorne.json instead.
 
 Acceptance criteria:
 
-- Hawthorne pragma suppression is detected.
+- Every pragma attempting to suppress one or more `HAW*` diagnostics produces a HAW901 warning.
 - Pragmas for unrelated compiler/analyzer diagnostics are ignored.
 
 ---
@@ -1665,7 +1646,8 @@ Required heuristic adjustment
 
 The goal is not zero diagnostics. The goal is low false-positive rates on architecture rules.
 
-Complexity rules are deterministic and can be activated as errors earlier.
+All rules default to warnings. Projects can promote individual rules to errors
+through `hawthorne.json` after local calibration.
 
 ---
 
@@ -1773,9 +1755,9 @@ Hawthorne v1 is complete when:
 - File-specific exceptions work.
 - Every exception requires a reason.
 - No supported global exception mechanism exists.
-- Hawthorne pragma suppression is either actively detected by HAW901 or explicitly prohibited/documented for CI enforcement.
+- Hawthorne pragma suppression is reported by HAW901.
 - Generated code is ignored by default.
-- Rules operate correctly in Visual Studio / Rider-compatible Roslyn environments and `dotnet build`.
+- Rules operate correctly in Visual Studio, Visual Studio Code, and `dotnet build`.
 - Every rule has positive and negative tests.
 - Metric calculators have exact-value unit tests.
 - Cross-platform exception paths are tested.

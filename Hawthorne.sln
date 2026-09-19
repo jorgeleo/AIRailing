@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hawthorne.Analyzers", "src\Hawthorne.Analyzers\Hawthorne.Analyzers.csproj", "{FA5C6AEC-1F9D-4F33-A0F3-CCCB0C0A4B2C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hawthorne.Analyzers.Tests", "src\Hawthorne.Analyzers.Tests\Hawthorne.Analyzers.Tests.csproj", "{2275E54F-A7A0-4A14-8D2E-B93B322B0948}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FA5C6AEC-1F9D-4F33-A0F3-CCCB0C0A4B2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA5C6AEC-1F9D-4F33-A0F3-CCCB0C0A4B2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA5C6AEC-1F9D-4F33-A0F3-CCCB0C0A4B2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA5C6AEC-1F9D-4F33-A0F3-CCCB0C0A4B2C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2275E54F-A7A0-4A14-8D2E-B93B322B0948}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2275E54F-A7A0-4A14-8D2E-B93B322B0948}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2275E54F-A7A0-4A14-8D2E-B93B322B0948}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2275E54F-A7A0-4A14-8D2E-B93B322B0948}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
