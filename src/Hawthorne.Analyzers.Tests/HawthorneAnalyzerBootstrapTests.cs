@@ -267,6 +267,26 @@ public sealed class HawthorneAnalyzerBootstrapTests
         Assert.Equal("HAW003", Assert.Single(diagnostics).Id);
     }
 
+    [Fact]
+    public async Task Analyze_WhenClassDependsOnMoreThanTwelveConcepts_ReportsHAW104()
+    {
+        var types = string.Concat(Enumerable.Range(1, 13).Select(index => $"class T{index} {{ }}"));
+        var fields = string.Concat(Enumerable.Range(1, 13).Select(index => $"T{index} f{index};"));
+        var compilation = CSharpCompilation.Create("TestAssembly", new[] { CSharpSyntaxTree.ParseText(types + "class Host {" + fields + "}") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+        Assert.Equal("HAW104", Assert.Single(diagnostics).Id);
+    }
+
+    [Fact]
+    public async Task Analyze_WhenInterfaceHasOneConcreteImplementation_ReportsHAW001()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly", new[] { CSharpSyntaxTree.ParseText("interface IWorker { } class Worker : IWorker { }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+        Assert.Equal("HAW001", Assert.Single(diagnostics).Id);
+    }
+
     private sealed class TestAdditionalText(string path, string text) : AdditionalText
     {
         public override string Path { get; } = path;

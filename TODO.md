@@ -7,8 +7,8 @@ the status section before stopping work.
 ## Current status
 
 - Current phase: Phase 2 — JSON configuration
-- Last completed item: HAW003 pass-through indirection detection
-- Next item: HAW104 class coupling
+- Last completed item: HAW104 class-coupling analysis and configuration
+- Next item: complete HAW001 multiple-implementation negative coverage
 - Blockers: none
 
 ## Foundation
@@ -38,8 +38,8 @@ the status section before stopping work.
 - [x] HAW004 — hidden singleton state.
 - [x] HAW002 — speculative factory.
 - [x] HAW003 — pass-through indirection and class-level ratio.
-- [ ] HAW104 — class coupling.
-- [ ] HAW001 — every in-compilation single-implementation interface.
+- [x] HAW104 — class coupling.
+- [ ] HAW001 — compilation-wide single concrete implementation detection implemented; negative coverage remains.
 
 ## Release readiness
 

@@ -15,7 +15,7 @@ internal sealed class HawthorneConfiguration
         int maximumNestingDepth,
         int maximumCyclomaticComplexity,
         int maximumCognitiveComplexity,
-        bool requireMutableSingletonState)
+        bool requireMutableSingletonState, int maximumClassCoupling)
     {
         Rules = rules;
         Exceptions = exceptions;
@@ -25,6 +25,7 @@ internal sealed class HawthorneConfiguration
         MaximumCyclomaticComplexity = maximumCyclomaticComplexity;
         MaximumCognitiveComplexity = maximumCognitiveComplexity;
         RequireMutableSingletonState = requireMutableSingletonState;
+        MaximumClassCoupling = maximumClassCoupling;
     }
 
     internal ImmutableDictionary<string, HawthorneRuleConfiguration> Rules { get; }
@@ -38,31 +39,34 @@ internal sealed class HawthorneConfiguration
     internal int MaximumCyclomaticComplexity { get; }
     internal int MaximumCognitiveComplexity { get; }
     internal bool RequireMutableSingletonState { get; }
+    internal int MaximumClassCoupling { get; }
 
     internal HawthorneRuleConfiguration GetRule(string diagnosticId) => Rules[diagnosticId];
 
     internal HawthorneConfiguration WithRule(string diagnosticId, HawthorneRuleConfiguration rule) =>
-        new(Rules.SetItem(diagnosticId, rule), Exceptions, ProjectDirectory, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity, RequireMutableSingletonState);
+        new(Rules.SetItem(diagnosticId, rule), Exceptions, ProjectDirectory, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity, RequireMutableSingletonState, MaximumClassCoupling);
 
     internal HawthorneConfiguration WithExceptions(ImmutableArray<HawthorneException> exceptions) =>
-        new(Rules, exceptions, ProjectDirectory, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity, RequireMutableSingletonState);
+        new(Rules, exceptions, ProjectDirectory, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity, RequireMutableSingletonState, MaximumClassCoupling);
 
     internal HawthorneConfiguration WithMethodLength(Hawthorne105Configuration methodLength) =>
-        new(Rules, Exceptions, ProjectDirectory, methodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity, RequireMutableSingletonState);
+        new(Rules, Exceptions, ProjectDirectory, methodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity, RequireMutableSingletonState, MaximumClassCoupling);
     internal HawthorneConfiguration WithMaximumNestingDepth(int maximum) =>
-        new(Rules, Exceptions, ProjectDirectory, MethodLength, maximum, MaximumCyclomaticComplexity, MaximumCognitiveComplexity, RequireMutableSingletonState);
+        new(Rules, Exceptions, ProjectDirectory, MethodLength, maximum, MaximumCyclomaticComplexity, MaximumCognitiveComplexity, RequireMutableSingletonState, MaximumClassCoupling);
     internal HawthorneConfiguration WithMaximumCyclomaticComplexity(int maximum) =>
-        new(Rules, Exceptions, ProjectDirectory, MethodLength, MaximumNestingDepth, maximum, MaximumCognitiveComplexity, RequireMutableSingletonState);
+        new(Rules, Exceptions, ProjectDirectory, MethodLength, MaximumNestingDepth, maximum, MaximumCognitiveComplexity, RequireMutableSingletonState, MaximumClassCoupling);
     internal HawthorneConfiguration WithMaximumCognitiveComplexity(int maximum) =>
-        new(Rules, Exceptions, ProjectDirectory, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, maximum, RequireMutableSingletonState);
+        new(Rules, Exceptions, ProjectDirectory, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, maximum, RequireMutableSingletonState, MaximumClassCoupling);
     internal HawthorneConfiguration WithRequireMutableSingletonState(bool value) =>
-        new(Rules, Exceptions, ProjectDirectory, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity, value);
+        new(Rules, Exceptions, ProjectDirectory, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity, value, MaximumClassCoupling);
+    internal HawthorneConfiguration WithMaximumClassCoupling(int value) =>
+        new(Rules, Exceptions, ProjectDirectory, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity, RequireMutableSingletonState, value);
 
     internal static HawthorneConfiguration CreateDefaults(IEnumerable<string> diagnosticIds, string? projectDirectory = null) =>
         new(diagnosticIds.ToImmutableDictionary(
             diagnosticId => diagnosticId,
             _ => HawthorneRuleConfiguration.Default,
-            StringComparer.Ordinal), ImmutableArray<HawthorneException>.Empty, projectDirectory, Hawthorne105Configuration.Default, 4, 10, 15, true);
+            StringComparer.Ordinal), ImmutableArray<HawthorneException>.Empty, projectDirectory, Hawthorne105Configuration.Default, 4, 10, 15, true, 12);
 }
 
 internal sealed class Hawthorne105Configuration

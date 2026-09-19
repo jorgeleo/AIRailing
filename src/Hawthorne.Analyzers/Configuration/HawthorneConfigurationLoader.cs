@@ -114,6 +114,12 @@ internal static class HawthorneConfigurationLoader
                         return HawthorneConfigurationLoadResult.Invalid("hawthorne.json.rules.HAW004.requireMutableState must be a boolean.", configurationFiles[0]);
                     configuration = configuration.WithRequireMutableSingletonState(mutableState.GetBoolean());
                 }
+                if (rule.Name == "HAW104")
+                {
+                    var maximum = GetPositiveInteger(rule.Value, "maximum", configuration.MaximumClassCoupling, out var error);
+                    if (error is not null) return HawthorneConfigurationLoadResult.Invalid(error.Replace("HAW105", "HAW104"), configurationFiles[0]);
+                    configuration = configuration.WithMaximumClassCoupling(maximum);
+                }
             }
 
             return LoadExceptions(root, configuration, configurationFiles[0]);
