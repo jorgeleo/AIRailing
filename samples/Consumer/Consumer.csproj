@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><OutputType>Exe</OutputType></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Hawthorne.Analyzers/Hawthorne.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <AdditionalFiles Include="hawthorne.json" />
+  </ItemGroup>
+</Project>

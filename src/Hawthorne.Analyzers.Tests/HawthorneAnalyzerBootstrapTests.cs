@@ -298,6 +298,15 @@ public sealed class HawthorneAnalyzerBootstrapTests
         Assert.Empty(diagnostics);
     }
 
+    [Fact]
+    public async Task Analyze_WhenPragmaSuppressesHawthorneRule_ReportsHAW901()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly", new[] { CSharpSyntaxTree.ParseText("#pragma warning disable HAW003\nclass Example { }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+        Assert.Equal("HAW901", Assert.Single(diagnostics).Id);
+    }
+
     private sealed class TestAdditionalText(string path, string text) : AdditionalText
     {
         public override string Path { get; } = path;

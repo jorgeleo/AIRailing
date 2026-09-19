@@ -6,9 +6,9 @@ the status section before stopping work.
 
 ## Current status
 
-- Current phase: Phase 2 — JSON configuration
-- Last completed item: HAW001 single-implementation abstraction analysis
-- Next item: HAW901 anti-pragma enforcement
+- Current phase: Implementation complete; awaiting user-owned release readiness
+- Last completed item: HAW901, sample consumer, and rule/configuration documentation
+- Next item: user-owned release readiness items below
 - Blockers: none
 
 ## Foundation
@@ -41,9 +41,9 @@ the status section before stopping work.
 
 ## Remaining implementation work
 
-- [ ] Add a sample consumer and package-consumption build test.
-- [ ] Implement `HAW901` pragma-suppression warning.
-- [ ] Add rule documentation and configuration documentation.
+- [x] Add a sample consumer and package-consumption build test.
+- [x] Implement `HAW901` pragma-suppression warning.
+- [x] Add rule documentation and configuration documentation.
 
 ## User-owned completion items
 

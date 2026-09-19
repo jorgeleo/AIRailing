@@ -39,6 +39,7 @@ public sealed class HawthorneAnalyzerBootstrap : DiagnosticAnalyzer
             HAW003PassThroughAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW104CouplingAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW001SingleImplementationAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
+            HAW901PragmaSuppressionAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             compilationStartContext.RegisterCompilationEndAction(compilationEndContext =>
             {
                 foreach (var exception in hawthorneConfiguration.Exceptions)
