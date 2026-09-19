@@ -16,30 +16,36 @@ public sealed class HawthorneAnalyzerBootstrap : DiagnosticAnalyzer
     {
         context.EnableConcurrentExecution();
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
-        context.RegisterCompilationAction(compilationContext =>
+        context.RegisterCompilationStartAction(compilationStartContext =>
         {
-            var configuration = HawthorneConfigurationLoader.Load(compilationContext.Options.AdditionalFiles);
+            var configuration = HawthorneConfigurationLoader.Load(compilationStartContext.Options.AdditionalFiles);
             if (!configuration.IsValid)
             {
-                compilationContext.ReportDiagnostic(Diagnostic.Create(
-                    HawthorneDiagnosticDescriptors.HAW900,
-                    GetConfigurationLocation(configuration.Source),
-                    configuration.ErrorMessage));
+                compilationStartContext.RegisterCompilationEndAction(compilationEndContext =>
+                    compilationEndContext.ReportDiagnostic(Diagnostic.Create(
+                        HawthorneDiagnosticDescriptors.HAW900,
+                        GetConfigurationLocation(configuration.Source),
+                        configuration.ErrorMessage)));
                 return;
             }
 
-            foreach (var exception in configuration.Configuration!.Exceptions)
+            var hawthorneConfiguration = configuration.Configuration!;
+            HAW105MethodLengthAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
+            compilationStartContext.RegisterCompilationEndAction(compilationEndContext =>
             {
-                var isMatched = compilationContext.Compilation.SyntaxTrees.Any(syntaxTree =>
-                    PathNormalizer.GetProjectRelativePath(configuration.Configuration.ProjectDirectory!, syntaxTree.FilePath) == exception.File);
-                if (!isMatched)
+                foreach (var exception in hawthorneConfiguration.Exceptions)
                 {
-                    compilationContext.ReportDiagnostic(Diagnostic.Create(
+                    var isMatched = compilationEndContext.Compilation.SyntaxTrees.Any(syntaxTree =>
+                        PathNormalizer.GetProjectRelativePath(hawthorneConfiguration.ProjectDirectory!, syntaxTree.FilePath) == exception.File);
+                    if (!isMatched)
+                    {
+                        compilationEndContext.ReportDiagnostic(Diagnostic.Create(
                         HawthorneDiagnosticDescriptors.HAW900,
                         GetConfigurationLocation(configuration.Source),
                         $"Exception path '{exception.File}' does not match a source file in this compilation."));
+                    }
                 }
-            }
+            });
         });
     }
 

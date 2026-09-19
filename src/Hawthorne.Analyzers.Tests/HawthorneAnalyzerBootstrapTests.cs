@@ -91,6 +91,24 @@ public sealed class HawthorneAnalyzerBootstrapTests
         Assert.Contains("does not match a source file", diagnostic.GetMessage());
     }
 
+    [Fact]
+    public async Task Analyze_WhenMethodExceedsExecutableStatementLimit_ReportsHAW105()
+    {
+        var statements = string.Concat(Enumerable.Repeat("int value = 0;", 31));
+        var compilation = CSharpCompilation.Create(
+            assemblyName: "TestAssembly",
+            syntaxTrees: new[] { CSharpSyntaxTree.ParseText($"class Example {{ void TooLong() {{ {statements} }} }}") },
+            references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+
+        var diagnostics = await compilation
+            .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()))
+            .GetAnalyzerDiagnosticsAsync();
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("HAW105", diagnostic.Id);
+        Assert.Equal(DiagnosticSeverity.Warning, diagnostic.Severity);
+    }
+
     private sealed class TestAdditionalText(string path, string text) : AdditionalText
     {
         public override string Path { get; } = path;
