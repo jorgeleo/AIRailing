@@ -45,6 +45,7 @@ public sealed class HawthorneAnalyzerBootstrap : DiagnosticAnalyzer
             HAW011ExcessiveMicroMethodsAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW013ExceptionLaunderingAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW014DefensiveNullCheckingAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
+            HAW015DeadConfigurationAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW016FakeAsyncAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW017UnnecessaryLinqMaterializationAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW018RepeatedEnumerationAnalyzer.Register(compilationStartContext, hawthorneConfiguration);

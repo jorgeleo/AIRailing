@@ -31,6 +31,119 @@
       "severity": "warning",
       "requireMutableState": true
     },
+    "HAW005": {
+      "_comment": "Wrapper explosion: a role-named type whose eligible methods mostly forward unchanged calls.",
+      "_potentialFix": "Remove the wrapper or add the boundary responsibility that justifies it.",
+      "enabled": true,
+      "severity": "warning",
+      "minimumForwardingMethods": 3,
+      "minimumForwardingRatio": 0.8,
+      "requireRoleSuffix": true
+    },
+    "HAW006": {
+      "_comment": "Premature generalization: one concrete derived use or one closed generic construction without meaningful shared behavior.",
+      "_potentialFix": "Use the concrete type until a second real use justifies the abstraction.",
+      "enabled": true,
+      "severity": "warning",
+      "maximumSharedExecutableStatements": 2,
+      "minimumDerivedTypes": 1,
+      "analyzeSingleClosedGenericUse": true
+    },
+    "HAW007": {
+      "_comment": "Counts service-like constructor dependencies while excluding scalar and options/configuration values.",
+      "_potentialFix": "Split the responsibility or introduce a cohesive collaborator.",
+      "enabled": true,
+      "severity": "warning",
+      "maximumDependencies": 7
+    },
+    "HAW008": {
+      "_comment": "Boolean parameters that directly control separate branches.",
+      "_potentialFix": "Replace behavior flags with focused operations or an explicit options model.",
+      "enabled": true,
+      "severity": "warning",
+      "warningParameterCount": 2,
+      "errorParameterCount": 3
+    },
+    "HAW010": {
+      "_comment": "Small service-style type with one public operation and limited source callers.",
+      "_potentialFix": "Co-locate the operation with its cohesive owner unless a real boundary is demonstrated.",
+      "enabled": true,
+      "severity": "warning",
+      "maximumPhysicalLines": 25,
+      "maximumCyclomaticComplexity": 2,
+      "maximumSourceCallers": 1
+    },
+    "HAW011": {
+      "_comment": "Private ordinary methods dominated by tiny helpers.",
+      "_potentialFix": "Inline obvious helpers or group cohesive behavior.",
+      "enabled": true,
+      "severity": "warning",
+      "maxTinyMethodRatio": 0.6,
+      "tinyMethodStatementLimit": 2,
+      "minimumMethodCount": 8
+    },
+    "HAW013": {
+      "_comment": "Generic exception wrapping without meaningful handling or context.",
+      "_potentialFix": "Preserve the original exception or add recoverable domain context.",
+      "enabled": true,
+      "severity": "warning",
+      "reportLogAndRethrow": false
+    },
+    "HAW014": {
+      "_comment": "Only reports redundant private null guards when all known source callers are non-null.",
+      "_potentialFix": "Remove the redundant private-boundary check after reviewing the call evidence.",
+      "enabled": true,
+      "severity": "warning",
+      "includeInternalMethods": false
+    },
+    "HAW015": {
+      "_comment": "Opt-in: unread private configuration/options properties, excluding public and attributed binding surfaces.",
+      "_potentialFix": "Remove the unused property or connect it to meaningful configuration behavior.",
+      "enabled": false,
+      "severity": "warning",
+      "includeInternalProperties": false,
+      "configurationTypeSuffixes": ["Options", "Settings", "Configuration"]
+    },
+    "HAW016": {
+      "_comment": "Async APIs that only complete synchronously; trivial Task.Run detection remains opt-in.",
+      "_potentialFix": "Return the synchronous result or introduce genuine asynchronous work.",
+      "enabled": true,
+      "severity": "warning",
+      "reportTrivialTaskRun": false
+    },
+    "HAW017": {
+      "_comment": "Immediate LINQ materialization whose result feeds another Enumerable operation.",
+      "_potentialFix": "Remove the materialization unless a collection boundary is required.",
+      "enabled": true,
+      "severity": "warning",
+      "analyzeToList": true,
+      "analyzeToArray": true
+    },
+    "HAW018": {
+      "_comment": "Same-block repeated enumeration of an enumerable source.",
+      "_potentialFix": "Materialize once at the ownership boundary or avoid repeated consumption.",
+      "enabled": true,
+      "severity": "warning",
+      "minimumEnumerations": 2
+    },
+    "HAW021": {
+      "_comment": "Catch-all default returns and excessive try-block density.",
+      "_potentialFix": "Propagate failures or recover meaningfully where the boundary owns recovery.",
+      "enabled": true,
+      "severity": "warning",
+      "minimumMethodCount": 5,
+      "maximumTryBlocksPerMethod": 0.75,
+      "reportCatchAllDefaultReturn": true
+    },
+    "HAW024": {
+      "_comment": "CancellationToken parameters that are unused or omitted from cancellable calls.",
+      "_potentialFix": "Forward the token to the cancellable operation or remove needless plumbing.",
+      "enabled": true,
+      "severity": "warning",
+      "reportMissingForwarding": true,
+      "treatNoneAsMissingForwarding": true,
+      "ignoreContractMethods": true
+    },
     "HAW101": {
       "_comment": "Reports methods whose cyclomatic complexity exceeds maximum.",
       "_potentialFix": "Split the method into focused methods, extract branch-specific strategies, use guard clauses, simplify conditionals, or replace repetitive branching with a data-driven lookup. Reduce the number of independent paths rather than suppressing the diagnostic.",

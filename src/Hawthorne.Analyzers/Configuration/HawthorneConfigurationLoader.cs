@@ -208,6 +208,20 @@ internal static class HawthorneConfigurationLoader
 
                     configuration = configuration.WithDefensiveNullChecking(defensiveNullChecking);
                 }
+                if (rule.Name == "HAW015")
+                {
+                    var deadConfiguration = GetDeadConfiguration(
+                        rule.Name,
+                        rule.Value,
+                        configuration.DeadConfiguration,
+                        out var deadConfigurationError);
+                    if (deadConfigurationError is not null)
+                    {
+                        return HawthorneConfigurationLoadResult.Invalid(deadConfigurationError, configurationFiles[0]);
+                    }
+
+                    configuration = configuration.WithDeadConfiguration(deadConfiguration);
+                }
                 if (rule.Name == "HAW016")
                 {
                     var fakeAsync = GetFakeAsync(
@@ -715,6 +729,34 @@ internal static class HawthorneConfigurationLoader
             out errorMessage);
         return errorMessage is null
             ? new Hawthorne013Configuration(genericExceptionTypes, reportLogAndRethrow)
+            : defaults;
+    }
+
+    private static Hawthorne015Configuration GetDeadConfiguration(
+        string ruleId,
+        JsonElement rule,
+        Hawthorne015Configuration defaults,
+        out string? errorMessage)
+    {
+        var includeInternalProperties = GetBoolean(
+            ruleId,
+            rule,
+            "includeInternalProperties",
+            defaults.IncludeInternalProperties,
+            out errorMessage);
+        if (errorMessage is not null)
+        {
+            return defaults;
+        }
+
+        var suffixes = GetNonEmptyStringArray(
+            ruleId,
+            rule,
+            "configurationTypeSuffixes",
+            defaults.ConfigurationTypeSuffixes,
+            out errorMessage);
+        return errorMessage is null
+            ? new Hawthorne015Configuration(includeInternalProperties, suffixes)
             : defaults;
     }
 

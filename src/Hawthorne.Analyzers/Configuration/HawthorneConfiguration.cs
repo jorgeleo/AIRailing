@@ -45,6 +45,7 @@ internal sealed class HawthorneConfiguration
     internal Hawthorne011Configuration ExcessiveMicroMethods => NextRules.ExcessiveMicroMethods;
     internal Hawthorne013Configuration ExceptionLaundering => NextRules.ExceptionLaundering;
     internal Hawthorne014Configuration DefensiveNullChecking => NextRules.DefensiveNullChecking;
+    internal Hawthorne015Configuration DeadConfiguration => NextRules.DeadConfiguration;
     internal Hawthorne016Configuration FakeAsync => NextRules.FakeAsync;
     internal Hawthorne017Configuration UnnecessaryLinqMaterialization => NextRules.UnnecessaryLinqMaterialization;
     internal Hawthorne018Configuration RepeatedEnumeration => NextRules.RepeatedEnumeration;
@@ -84,6 +85,8 @@ internal sealed class HawthorneConfiguration
         new(Rules, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity, RequireMutableSingletonState, MaximumClassCoupling, NextRules.WithExceptionLaundering(value));
     internal HawthorneConfiguration WithDefensiveNullChecking(Hawthorne014Configuration value) =>
         new(Rules, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity, RequireMutableSingletonState, MaximumClassCoupling, NextRules.WithDefensiveNullChecking(value));
+    internal HawthorneConfiguration WithDeadConfiguration(Hawthorne015Configuration value) =>
+        new(Rules, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity, RequireMutableSingletonState, MaximumClassCoupling, NextRules.WithDeadConfiguration(value));
     internal HawthorneConfiguration WithFakeAsync(Hawthorne016Configuration value) =>
         new(Rules, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity, RequireMutableSingletonState, MaximumClassCoupling, NextRules.WithFakeAsync(value));
     internal HawthorneConfiguration WithUnnecessaryLinqMaterialization(Hawthorne017Configuration value) =>
@@ -125,7 +128,8 @@ internal sealed class HawthorneNextRuleConfiguration
         Hawthorne017Configuration.Default,
         Hawthorne021Configuration.Default,
         Hawthorne024Configuration.Default,
-        Hawthorne018Configuration.Default);
+        Hawthorne018Configuration.Default,
+        Hawthorne015Configuration.Default);
 
     internal HawthorneNextRuleConfiguration(
         Hawthorne005Configuration wrapper,
@@ -140,7 +144,8 @@ internal sealed class HawthorneNextRuleConfiguration
         Hawthorne017Configuration unnecessaryLinqMaterialization,
         Hawthorne021Configuration excessiveTryCatch,
         Hawthorne024Configuration cancellationTokens,
-        Hawthorne018Configuration? repeatedEnumeration = null)
+        Hawthorne018Configuration? repeatedEnumeration = null,
+        Hawthorne015Configuration? deadConfiguration = null)
     {
         Wrapper = wrapper;
         PrematureGeneralization = prematureGeneralization;
@@ -150,6 +155,7 @@ internal sealed class HawthorneNextRuleConfiguration
         ExcessiveMicroMethods = excessiveMicroMethods;
         ExceptionLaundering = exceptionLaundering;
         DefensiveNullChecking = defensiveNullChecking;
+        DeadConfiguration = deadConfiguration ?? Hawthorne015Configuration.Default;
         FakeAsync = fakeAsync;
         UnnecessaryLinqMaterialization = unnecessaryLinqMaterialization;
         RepeatedEnumeration = repeatedEnumeration ?? Hawthorne018Configuration.Default;
@@ -165,6 +171,7 @@ internal sealed class HawthorneNextRuleConfiguration
     internal Hawthorne011Configuration ExcessiveMicroMethods { get; }
     internal Hawthorne013Configuration ExceptionLaundering { get; }
     internal Hawthorne014Configuration DefensiveNullChecking { get; }
+    internal Hawthorne015Configuration DeadConfiguration { get; }
     internal Hawthorne016Configuration FakeAsync { get; }
     internal Hawthorne017Configuration UnnecessaryLinqMaterialization { get; }
     internal Hawthorne018Configuration RepeatedEnumeration { get; }
@@ -193,7 +200,10 @@ internal sealed class HawthorneNextRuleConfiguration
         new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, value, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens);
 
     internal HawthorneNextRuleConfiguration WithDefensiveNullChecking(Hawthorne014Configuration value) =>
-        new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, value, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens);
+        new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, value, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens, RepeatedEnumeration);
+
+    internal HawthorneNextRuleConfiguration WithDeadConfiguration(Hawthorne015Configuration value) =>
+        new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens, RepeatedEnumeration, value);
 
     internal HawthorneNextRuleConfiguration WithFakeAsync(Hawthorne016Configuration value) =>
         new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, value, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens);
@@ -390,6 +400,25 @@ internal sealed class Hawthorne014Configuration
         IncludeInternalMethods = includeInternalMethods;
 
     internal bool IncludeInternalMethods { get; }
+}
+
+internal sealed class Hawthorne015Configuration
+{
+    internal static Hawthorne015Configuration Default { get; } = new(
+        includeInternalProperties: false,
+        configurationTypeSuffixes: ImmutableArray.Create("Options", "Settings", "Configuration"));
+
+    internal Hawthorne015Configuration(bool includeInternalProperties, ImmutableArray<string> configurationTypeSuffixes)
+    {
+        IncludeInternalProperties = includeInternalProperties;
+        ConfigurationTypeSuffixes = configurationTypeSuffixes;
+    }
+
+    internal bool IncludeInternalProperties { get; }
+    internal ImmutableArray<string> ConfigurationTypeSuffixes { get; }
+
+    internal bool IsConfigurationType(string typeName) =>
+        ConfigurationTypeSuffixes.Any(suffix => typeName.EndsWith(suffix, StringComparison.Ordinal));
 }
 
 internal sealed class Hawthorne016Configuration

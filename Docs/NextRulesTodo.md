@@ -9,11 +9,11 @@ without the evidence stated in the plan.
 
 - Current phase: Wave 1 implementation in progress.
 - Last completed item: HAW005, HAW006, HAW007, HAW008, HAW010, HAW011,
-  HAW013, HAW014, HAW016, HAW017, HAW018, HAW021, and HAW024
+  HAW013, HAW014, HAW015, HAW016, HAW017, HAW018, HAW021, and HAW024
   implementation, focused tests, rule documentation, full test suite, and
   solution build.
-- Next action: implement HAW015 Dead Configuration with the shared
-  configuration-flow index from failing focused tests.
+- Next action: calibrate the completed Wave 2 rules against the repository set,
+  then begin Wave 3 HAW020.
 - The HAW017 LINQ test setup exposed and fixed an HAW104 error-symbol
   recursion in `CouplingInventory`.
 - Blockers: none identified. The five title-only candidates have conservative
@@ -69,7 +69,7 @@ without the evidence stated in the plan.
   tests.
 - [x] HAW014: implement private non-nullable redundant-guard analysis with
   source call nullability evidence; test nullable/public/unknown-call paths.
-- [ ] HAW015: implement the conservative unused private configuration-property
+- [x] HAW015: implement the conservative unused private configuration-property
   contract; test binding, meaningful reads, and external-contract exclusions.
 - [x] HAW017: implement immediate `ToList`/`ToArray` chain detection; test
   every supported LINQ receiver plus mutations and returned collections.

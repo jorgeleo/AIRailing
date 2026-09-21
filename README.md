@@ -42,6 +42,20 @@ The .NET SDK resolves GitHub Packages with your `GITHUB_TOKEN` automatically.
 | HAW002 | `Factory` methods that only construct one type directly | — |
 | HAW003 | Methods that forward unchanged arguments to a dependency | 3+ methods, or 80%+ of a type |
 | HAW004 | Stored static shared instances with mutable state | — |
+| HAW005 | Wrapper-style types that mostly forward to one dependency | 3 methods / 80% |
+| HAW006 | Abstract or generic abstractions with one demonstrated use | warning |
+| HAW007 | Constructors with too many service-like dependencies | 7 |
+| HAW008 | Boolean parameters controlling separate branches | 2 warning / 3 error |
+| HAW010 | Small one-method service-style classes | 25 lines / complexity 2 |
+| HAW011 | Types dominated by tiny private methods | 8 methods / 60% |
+| HAW013 | Generic exception wrapping without meaningful context | warning |
+| HAW014 | Proven-redundant private non-null guards | opt-in evidence |
+| HAW015 | Unread private configuration/options properties | opt-in |
+| HAW016 | Async APIs that only complete synchronously | warning |
+| HAW017 | Unnecessary immediate LINQ materialization | warning |
+| HAW018 | Repeated enumeration of an enumerable source | 2 consumers |
+| HAW021 | Silent default-return catches and dense try/catch types | 5 methods / 0.75 |
+| HAW024 | Cancellation tokens that are not used or forwarded | warning |
 | HAW101 | Cyclomatic complexity | 10 |
 | HAW102 | Cognitive complexity | 15 |
 | HAW103 | Control-flow nesting depth | 4 |
@@ -81,6 +95,20 @@ A complete example:
   "rules": {
     "HAW001": { "enabled": false },
     "HAW004": { "severity": "error", "requireMutableState": true },
+    "HAW005": { "minimumForwardingMethods": 3, "minimumForwardingRatio": 0.80 },
+    "HAW006": { "maximumSharedExecutableStatements": 2, "analyzeSingleClosedGenericUse": true },
+    "HAW007": { "maximumDependencies": 7 },
+    "HAW008": { "warningParameterCount": 2, "errorParameterCount": 3 },
+    "HAW010": { "maximumPhysicalLines": 25, "maximumCyclomaticComplexity": 2 },
+    "HAW011": { "maxTinyMethodRatio": 0.60, "tinyMethodStatementLimit": 2, "minimumMethodCount": 8 },
+    "HAW013": { "reportLogAndRethrow": false },
+    "HAW014": { "includeInternalMethods": false },
+    "HAW015": { "enabled": false, "includeInternalProperties": false },
+    "HAW016": { "reportTrivialTaskRun": false },
+    "HAW017": { "analyzeToList": true, "analyzeToArray": true },
+    "HAW018": { "minimumEnumerations": 2 },
+    "HAW021": { "minimumMethodCount": 5, "maximumTryBlocksPerMethod": 0.75 },
+    "HAW024": { "reportMissingForwarding": true, "treatNoneAsMissingForwarding": true },
     "HAW101": { "maximum": 12 },
     "HAW102": { "maximum": 20 },
     "HAW103": { "maximum": 3 },
