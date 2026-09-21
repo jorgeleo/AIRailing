@@ -1,4 +1,5 @@
 using Hawthorne.Analyzers.Configuration;
+using Hawthorne.Analyzers.Analysis.Architecture;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -32,7 +33,7 @@ internal static class HAW018RepeatedEnumerationAnalyzer
         var states = new Dictionary<ISymbol, EnumerationState>(SymbolEqualityComparer.Default);
         foreach (var parameter in method.ParameterList.Parameters)
         {
-            if (context.SemanticModel.GetDeclaredSymbol(parameter) is IParameterSymbol symbol && IsCandidateEnumerable(symbol.Type))
+            if (context.SemanticModel.GetDeclaredSymbol(parameter) is IParameterSymbol symbol && EnumerableClassifier.IsCandidateEnumerable(symbol.Type))
             {
                 states[symbol] = new EnumerationState();
             }
@@ -80,7 +81,7 @@ internal static class HAW018RepeatedEnumerationAnalyzer
     {
         foreach (var variable in statement.DescendantNodesAndSelf().OfType<VariableDeclaratorSyntax>())
         {
-            if (semanticModel.GetDeclaredSymbol(variable) is ILocalSymbol symbol && IsCandidateEnumerable(symbol.Type))
+            if (semanticModel.GetDeclaredSymbol(variable) is ILocalSymbol symbol && EnumerableClassifier.IsCandidateEnumerable(symbol.Type))
             {
                 if (!states.ContainsKey(symbol))
                 {
@@ -144,23 +145,7 @@ internal static class HAW018RepeatedEnumerationAnalyzer
 
     private static bool IsEnumerationMethod(IMethodSymbol method) =>
         method.Name == "GetEnumerator" ||
-        TerminalOperations.Contains(method.Name) &&
-        method.ContainingType.Name == "Enumerable" &&
-        method.ContainingNamespace.ToDisplayString() == "System.Linq";
-
-    private static bool IsCandidateEnumerable(ITypeSymbol type)
-    {
-        if (type is IArrayTypeSymbol || type.SpecialType == SpecialType.System_String || type.TypeKind == TypeKind.Error)
-        {
-            return false;
-        }
-
-        var interfaces = type.AllInterfaces.Append(type).OfType<INamedTypeSymbol>().Select(@interface => @interface.OriginalDefinition.ToDisplayString());
-        return interfaces.Contains("System.Collections.Generic.IEnumerable<T>", StringComparer.Ordinal) &&
-            !interfaces.Any(@interface => @interface is "System.Collections.Generic.ICollection<T>" or
-                "System.Collections.Generic.IReadOnlyCollection<T>" or "System.Collections.Generic.IList<T>" or
-                "System.Collections.Generic.IReadOnlyList<T>");
-    }
+        TerminalOperations.Contains(method.Name) && EnumerableClassifier.IsLinqOperation(method);
 
     private sealed class EnumerationState
     {

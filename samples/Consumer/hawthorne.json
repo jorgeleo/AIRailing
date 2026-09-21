@@ -97,9 +97,9 @@
       "includeInternalMethods": false
     },
     "HAW015": {
-      "_comment": "Opt-in: unread private configuration/options properties, excluding public and attributed binding surfaces.",
+      "_comment": "Unread private configuration/options properties, excluding public and attributed binding surfaces.",
       "_potentialFix": "Remove the unused property or connect it to meaningful configuration behavior.",
-      "enabled": false,
+      "enabled": true,
       "severity": "warning",
       "includeInternalProperties": false,
       "configurationTypeSuffixes": ["Options", "Settings", "Configuration"]
@@ -145,16 +145,16 @@
       "ignoreContractMethods": true
     },
     "HAW020": {
-      "_comment": "Opt-in EF Core repository pass-through heuristic.",
-      "enabled": false,
+      "_comment": "EF Core repository pass-through heuristic.",
+      "enabled": true,
       "minimumForwardingMethods": 3,
       "minimumForwardingRatio": 0.8,
       "repositorySuffixes": ["Repository", "Store", "Dao"],
       "requireRepositorySuffix": true
     },
     "HAW023": {
-      "_comment": "Opt-in private dead extension-point heuristic.",
-      "enabled": false,
+      "_comment": "Private dead extension-point heuristic.",
+      "enabled": true,
       "includePrivateMembers": true,
       "includeExternallyAccessibleMembers": false,
       "analyzeEvents": true,
@@ -162,29 +162,29 @@
       "analyzeVirtualHooks": true
     },
     "HAW025": {
-      "_comment": "Opt-in unchanged configuration-flow chain heuristic.",
-      "enabled": false,
+      "_comment": "Unchanged configuration-flow chain heuristic.",
+      "enabled": true,
       "minimumForwardingHops": 2,
       "configurationTypeSuffixes": ["Options", "Settings", "Configuration"]
     },
     "HAW029": {
-      "_comment": "Opt-in lifecycle logging noise heuristic.",
-      "enabled": false,
+      "_comment": "Lifecycle logging noise heuristic.",
+      "enabled": true,
       "minimumMethodCount": 5,
       "maximumLifecycleLogRatio": 0.8,
       "lifecycleTerms": ["enter", "exit", "success", "start", "finish"],
       "loggerTypeNames": ["ILogger", "ILogger<"]
     },
     "HAW030": {
-      "_comment": "Opt-in structural near-duplicate cluster heuristic.",
-      "enabled": false,
+      "_comment": "Structural near-duplicate cluster heuristic.",
+      "enabled": true,
       "minimumMethods": 3,
       "minimumStatements": 3,
       "minimumSimilarity": 0.9
     },
     "HAW100": {
-      "_comment": "Opt-in informational abstraction density metric.",
-      "enabled": false,
+      "_comment": "Informational abstraction density metric.",
+      "enabled": true,
       "minimumBehavioralTypes": 1
     },
     "HAW101": {

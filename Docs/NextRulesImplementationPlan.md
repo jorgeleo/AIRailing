@@ -2,7 +2,8 @@
 
 ## Status and scope
 
-Status: planned; no analyzer implementation in this document has started.
+Status: implementation complete for the catalog and shared hardening; release
+calibration and IDE consumption evidence remain intentionally manual.
 
 This plan implements every candidate in [next-rules.md](next-rules.md):
 HAW005–HAW008, HAW010–HAW011, HAW013–HAW018, HAW020–HAW021,
@@ -107,15 +108,16 @@ also deterministic.
 
 Rules whose proposed contract is necessarily heuristic (HAW015, HAW020,
 HAW023, HAW025, HAW029, and HAW030) are implemented and documented in the
-same release train, but start disabled by default until their own calibration
-is accepted. Their configuration still supports `enabled: true` and a severity
-override. HAW100 is disabled by default and informational when enabled because
-it reports a project health measurement rather than an individual violation.
+same release train. They are enabled by default by product decision, while
+their configuration still supports `enabled: false` and a severity override.
+HAW100 is informational by default because it reports a project health
+measurement rather than an individual violation. Repository calibration
+remains required before release.
 
-This is an explicit exception to the original v1 warning-default convention;
-the README and sample configuration must say which newer rules are opt-in and
-why. Calibration may promote a rule to the normal warning default only with
-recorded false-positive evidence.
+This is an explicit extension of the v1 warning-default convention; the
+README and sample configuration document the default-on policy and each rule's
+disable option. Calibration may still adjust thresholds or exclusions based
+on recorded false-positive evidence.
 
 ## Rule contracts and implementation details
 
@@ -332,7 +334,7 @@ whole-method control-flow proof. Add CFG handling only after tests demonstrate
 that it improves correct path sensitivity. The option is
 `minimumEnumerations` (default 2).
 
-### Wave 3 — opt-in architectural heuristics
+### Wave 3 — default-on architectural heuristics
 
 #### HAW020 — Boilerplate Repository Layer
 
@@ -344,8 +346,9 @@ symbols, not `DbSet` text. Selection, transaction orchestration, query policy,
 mapping, authorization, caching, and domain behavior make a method
 non-boilerplate.
 
-The rule is opt-in by default because many projects require repository
-boundaries intentionally. Options: `minimumForwardingMethods`,
+The rule is enabled by default because the product policy is all catalog rules
+on; projects may disable it when a repository boundary is intentional. Options:
+`minimumForwardingMethods`,
 `minimumForwardingRatio`, `repositorySuffixes`, and `requireRepositorySuffix`.
 
 #### HAW023 — Dead Extension Points
@@ -372,8 +375,8 @@ boundary with related locations for the whole chain.
 
 Recognize option wrappers and configured type suffixes. Do not report a type
 that reads a value, derives a setting, validates options, converts a value, or
-crosses a documented external contract. This rule is opt-in initially; options
-are `minimumForwardingHops` (default 2) and `configurationTypeSuffixes`.
+crosses a documented external contract. Options are `minimumForwardingHops`
+(default 2) and `configurationTypeSuffixes`.
 
 #### HAW029 — Excessive Logging Noise
 
@@ -384,7 +387,7 @@ not count warning/error/critical logs, logs with exception data, audit/security
 events, metrics, or business-state logs. The type-level report lists the ratio
 and representative method names.
 
-The initial default is disabled. Options are `minimumMethodCount`,
+The rule is enabled by default. Options are `minimumMethodCount`,
 `maximumLifecycleLogRatio`, `lifecycleTerms`, and `loggerTypeNames`.
 
 #### HAW030 — Copy-Paste Near Duplication
@@ -399,8 +402,8 @@ as related locations.
 
 Exclude generated code, overrides/interface implementations, trivial accessors,
 and clusters below the statement/size threshold. Mapping layers may be
-legitimate; this rule is opt-in and documentation must emphasize reviewing a
-cluster before abstracting it. Options are `minimumMethods`,
+legitimate; documentation must emphasize reviewing a cluster before
+abstracting it. Options are `minimumMethods`,
 `minimumStatements`, and `minimumSimilarity`.
 
 #### HAW100 — Abstraction Density
@@ -441,7 +444,7 @@ Calibrate each rule against at least an ASP.NET Core application, class
 library, CLI, layered enterprise application, AI-generated sample, and mature
 open-source project. Record rule ID, location, true/false-positive decision,
 reason, time/diagnostic count, and resulting heuristic/configuration change.
-No disabled-by-default heuristic is promoted without this record.
+No heuristic threshold or exclusion is changed without this record.
 
 ## Delivery order and gates
 
@@ -451,8 +454,8 @@ No disabled-by-default heuristic is promoted without this record.
    HAW010, HAW013, HAW006, HAW021. Calibrate after each small slice.
 3. Implement Wave 2 in the order HAW011, HAW017, HAW018, HAW014, HAW015.
 4. Implement Wave 3 in the order HAW020, HAW023, HAW025, HAW029, HAW030,
-   HAW100. Keep the documented opt-in defaults until calibration approves a
-   promotion.
+   HAW100. Keep the documented default-on policy while calibration records any
+   threshold or suppression adjustments.
 5. For every slice, run its focused tests first, then `dotnet test
    Hawthorne.sln`, `dotnet build Hawthorne.sln`, the sample consumer build,
    `dotnet pack`/package-content validation, and `git diff --check`.
@@ -462,9 +465,10 @@ No disabled-by-default heuristic is promoted without this record.
 
 ## Completion criteria
 
-The next catalog is complete only when all twenty IDs are registered, have
-strict configuration support, detection logic, isolated and integrated TDD
-coverage, HAW901-compatible suppression behavior, rule documentation, sample
-configuration entries, release notes, and recorded calibration. The release
-must leave existing HAW001–HAW106, HAW900, and HAW901 behavior unchanged unless
-a separately documented regression test intentionally changes it.
+The implementation is complete when all twenty IDs are registered, have strict
+configuration support, detection logic, isolated and integrated TDD coverage,
+HAW901-compatible suppression behavior, rule documentation, sample
+configuration entries, and release notes. Release readiness additionally
+requires recorded calibration and real-consumer IDE evidence. Existing
+HAW001–HAW106, HAW900, and HAW901 behavior remains unchanged unless a
+separately documented regression test intentionally changes it.

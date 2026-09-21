@@ -64,11 +64,7 @@ internal static class HAW020RepositoryLayerAnalyzer
             IParameterSymbol parameter => parameter.Type,
             _ => null,
         };
-        var named = type as INamedTypeSymbol;
-        if (named is null) return false;
-        var original = named.OriginalDefinition;
-        var ns = original.ContainingNamespace?.ToDisplayString() ?? string.Empty;
-        return ns.StartsWith("Microsoft.EntityFrameworkCore", StringComparison.Ordinal);
+        return TypeRoleClassifier.IsEntityFrameworkType(type);
     }
 }
 
@@ -177,7 +173,7 @@ internal static class HAW025ConfigurationFlowAnalyzer
                 {
                     if (invocation.ArgumentList.Arguments[i].Expression is not IdentifierNameSyntax identifier ||
                         model.GetSymbolInfo(identifier, context.CancellationToken).Symbol is not IParameterSymbol source ||
-                        !options.IsConfigurationType(source.Type) || !SymbolEqualityComparer.Default.Equals(source.Type, target.Parameters[i].Type)) continue;
+                    !ConfigurationValueClassifier.IsConfigurationType(source.Type, options.ConfigurationTypeSuffixes) || !SymbolEqualityComparer.Default.Equals(source.Type, target.Parameters[i].Type)) continue;
                     edges[source] = new Edge(source, target.Parameters[i], invocation.GetLocation());
                 }
             }
@@ -185,7 +181,7 @@ internal static class HAW025ConfigurationFlowAnalyzer
             {
                 if (memberAccess.Expression is IdentifierNameSyntax identifier &&
                     model.GetSymbolInfo(identifier, context.CancellationToken).Symbol is IParameterSymbol parameter &&
-                    options.IsConfigurationType(parameter.Type))
+                    ConfigurationValueClassifier.IsConfigurationType(parameter.Type, options.ConfigurationTypeSuffixes))
                 {
                     consumed.Add(parameter);
                 }
@@ -235,21 +231,14 @@ internal static class HAW029LoggingNoiseAnalyzer
         var model = compilation.GetSemanticModel(declaration.SyntaxTree);
         foreach (var invocation in declaration.DescendantNodes().OfType<InvocationExpressionSyntax>())
         {
-            if (model.GetSymbolInfo(invocation, cancellationToken).Symbol is not IMethodSymbol target || !target.Name.StartsWith("Log", StringComparison.Ordinal) || target.Name.Contains("Error", StringComparison.Ordinal) || target.Name.Contains("Warning", StringComparison.Ordinal) || target.Name.Contains("Critical", StringComparison.Ordinal)) continue;
-            if (invocation.Expression is not MemberAccessExpressionSyntax access || !IsLoggerType(model.GetTypeInfo(access.Expression, cancellationToken).Type, options)) continue;
+            if (model.GetSymbolInfo(invocation, cancellationToken).Symbol is not IMethodSymbol target || !LoggingClassifier.IsLifecycleMethod(target)) continue;
+            if (invocation.Expression is not MemberAccessExpressionSyntax access || !LoggingClassifier.IsLoggerType(model.GetTypeInfo(access.Expression, cancellationToken).Type, options.LoggerTypeNames)) continue;
             if (invocation.ArgumentList.Arguments.Count == 0 || model.GetConstantValue(invocation.ArgumentList.Arguments[0].Expression, cancellationToken) is not { HasValue: true, Value: string template } ||
-                !options.LifecycleTerms.Any(term => template.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0)) continue;
+                !LoggingClassifier.IsLifecycleTemplate(template, options.LifecycleTerms)) continue;
             if (invocation.ArgumentList.Arguments.Skip(1).Any(argument => IsException(model.GetTypeInfo(argument.Expression, cancellationToken).Type, compilation))) continue;
             return true;
         }
         return false;
-    }
-
-    private static bool IsLoggerType(ITypeSymbol? type, Hawthorne029Configuration options)
-    {
-        if (type is not INamedTypeSymbol named) return false;
-        var name = named.OriginalDefinition.ToDisplayString();
-        return options.LoggerTypeNames.Any(configured => name.Contains(configured, StringComparison.Ordinal) || named.Name.StartsWith(configured.TrimEnd('<'), StringComparison.Ordinal));
     }
 
     private static bool IsException(ITypeSymbol? type, Compilation compilation)

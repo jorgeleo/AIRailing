@@ -6,10 +6,10 @@ the status section before stopping work.
 
 ## Current status
 
-- Current phase: next-rule catalog Wave 3 implementation complete; calibration and release gates remain
+- Current phase: all next-rule catalog implementations enabled by default; regression hardening is complete
 - Last completed item: HAW020, HAW023, HAW025, HAW029, HAW030, and HAW100 implementation with focused tests, docs, and bootstrap/configuration integration
-- Next item: calibrate Wave 2 and Wave 3 heuristics against the approved repository set, then complete release validation
-- Progress checkpoint: all six Wave 3 rules are opt-in and have focused tests; HAW100 reports invariant metric properties and Wave 3 compilation-end rules preserve related locations.
+- Next item: repository calibration and IDE checks remain manual; automated build/package gates are complete
+- Progress checkpoint: all next-rule catalog rules are enabled by default; HAW100 reports invariant metric properties and Wave 3 compilation-end rules preserve related locations.
 - Blockers: none
 
 The detailed, resumable checklist for the post-v1 catalog is
@@ -55,15 +55,16 @@ remain the v1 baseline and must stay green while the next catalog is added.
 - [x] Choose the release version and license; package ID and repository metadata are configured.
 - [x] Commit and manage the Git repository history.
 - [x] Choose and configure the CI provider, including any package-feed credentials.
-- [x] Provide or approve the real repositories used for architecture-rule calibration, then review the recorded false-positive results.
-- [x] Perform final Visual Studio and Visual Studio Code consumption checks on the intended development environments.
+- [ ] Provide or approve the real repositories used for architecture-rule calibration, then review the recorded false-positive results.
+- [ ] Perform final Visual Studio and Visual Studio Code consumption checks on the intended development environments.
 
 ## Release readiness
 
-- [x] Calibrate architecture diagnostics against real repositories.
+- [ ] Calibrate architecture diagnostics against real repositories.
 - [x] Add NuGet packaging metadata and package validation.
 - [x] Add CI build/test gate.
-- [x] Verify Visual Studio, Visual Studio Code, and `dotnet build` consumption.
+- [x] Verify `dotnet build` and packed analyzer package consumption.
+- [ ] Verify Visual Studio and Visual Studio Code consumption.
 
 ## Pause log
 

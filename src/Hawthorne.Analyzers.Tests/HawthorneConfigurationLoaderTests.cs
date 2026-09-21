@@ -29,9 +29,18 @@ public sealed class HawthorneConfigurationLoaderTests
         var configuration = Assert.IsType<HawthorneConfiguration>(result.Configuration);
         Assert.True(configuration.GetRule("HAW005").IsEnabled);
         Assert.Equal(DiagnosticSeverity.Warning, configuration.GetRule("HAW005").Severity);
-        Assert.False(configuration.GetRule("HAW015").IsEnabled);
-        Assert.False(configuration.GetRule("HAW100").IsEnabled);
+        Assert.True(configuration.GetRule("HAW015").IsEnabled);
+        Assert.True(configuration.GetRule("HAW020").IsEnabled);
+        Assert.True(configuration.GetRule("HAW023").IsEnabled);
+        Assert.True(configuration.GetRule("HAW025").IsEnabled);
+        Assert.True(configuration.GetRule("HAW029").IsEnabled);
+        Assert.True(configuration.GetRule("HAW030").IsEnabled);
+        Assert.True(configuration.GetRule("HAW100").IsEnabled);
         Assert.Equal(DiagnosticSeverity.Info, configuration.GetRule("HAW100").Severity);
+        foreach (var descriptor in HawthorneDiagnosticDescriptors.All.Where(descriptor => descriptor.Id != "HAW106"))
+        {
+            Assert.True(configuration.GetRule(descriptor.Id).IsEnabled, descriptor.Id);
+        }
     }
 
     [Fact]
@@ -85,6 +94,26 @@ public sealed class HawthorneConfigurationLoaderTests
         var configuration = Assert.IsType<HawthorneConfiguration>(result.Configuration);
         Assert.Equal(2, configuration.MethodLength.MaximumExecutableStatements);
         Assert.Equal(3, configuration.MethodLength.MaximumPhysicalLines);
+    }
+
+    [Fact]
+    public void Load_WhenRuleContainsUnknownProperty_ReturnsConfigurationError()
+    {
+        var result = HawthorneConfigurationLoader.Load(ImmutableArray.Create<AdditionalText>(
+            new TestAdditionalText("/project/hawthorne.json", "{ \"version\": 1, \"rules\": { \"HAW020\": { \"minimunForwardingMethods\": 3 } } }")));
+
+        Assert.False(result.IsValid);
+        Assert.Contains("minimunForwardingMethods", result.ErrorMessage);
+    }
+
+    [Fact]
+    public void Load_WhenWave3RatioIsMalformed_ReturnsConfigurationError()
+    {
+        var result = HawthorneConfigurationLoader.Load(ImmutableArray.Create<AdditionalText>(
+            new TestAdditionalText("/project/hawthorne.json", "{ \"version\": 1, \"rules\": { \"HAW029\": { \"maximumLifecycleLogRatio\": 2 } } }")));
+
+        Assert.False(result.IsValid);
+        Assert.Contains("maximumLifecycleLogRatio", result.ErrorMessage);
     }
 
     [Fact]

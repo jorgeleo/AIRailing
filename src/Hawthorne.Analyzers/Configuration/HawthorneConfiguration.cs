@@ -125,7 +125,6 @@ internal sealed class HawthorneConfiguration
     private static HawthorneRuleConfiguration GetDefaultRuleConfiguration(string diagnosticId) => diagnosticId switch
     {
         "HAW106" => HawthorneRuleConfiguration.FormattingDefault,
-        "HAW015" or "HAW020" or "HAW023" or "HAW025" or "HAW029" or "HAW030" => HawthorneRuleConfiguration.OptInDefault,
         "HAW100" => HawthorneRuleConfiguration.HealthDefault,
         _ => HawthorneRuleConfiguration.Default,
     };
@@ -676,7 +675,7 @@ internal sealed class Hawthorne030Configuration
 
 internal sealed class Hawthorne100Configuration
 {
-    internal static Hawthorne100Configuration Default { get; } = new(null, 1, ImmutableArray.Create("Factory", "Adapter", "Facade", "Provider", "Manager", "Service"));
+    internal static Hawthorne100Configuration Default { get; } = new(null, 5, ImmutableArray.Create("Factory", "Adapter", "Facade", "Provider", "Manager", "Service"));
 
     internal Hawthorne100Configuration(double? maximumDensity, int minimumBehavioralTypes, ImmutableArray<string> abstractionRoleSuffixes)
     {
@@ -722,9 +721,7 @@ internal sealed class HawthorneRuleConfiguration
 
     internal static HawthorneRuleConfiguration FormattingDefault { get; } = new(false, DiagnosticSeverity.Warning);
 
-    internal static HawthorneRuleConfiguration OptInDefault { get; } = new(false, DiagnosticSeverity.Warning);
-
-    internal static HawthorneRuleConfiguration HealthDefault { get; } = new(false, DiagnosticSeverity.Info);
+    internal static HawthorneRuleConfiguration HealthDefault { get; } = new(true, DiagnosticSeverity.Info);
 }
 
 internal sealed class HawthorneConfigurationLoadResult

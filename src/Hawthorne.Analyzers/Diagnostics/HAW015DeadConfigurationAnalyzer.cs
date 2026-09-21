@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Hawthorne.Analyzers.Analysis.Architecture;
 using Hawthorne.Analyzers.Configuration;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -53,8 +54,7 @@ internal static class HAW015DeadConfigurationAnalyzer
         ConcurrentDictionary<INamedTypeSymbol, byte> optionPayloads)
     {
         if (context.SemanticModel.GetTypeInfo(genericName).Type is not INamedTypeSymbol optionsType ||
-            optionsType.OriginalDefinition.Name is not ("IOptions" or "IOptionsSnapshot" or "IOptionsMonitor") ||
-            optionsType.OriginalDefinition.ContainingNamespace.ToDisplayString() != "Microsoft.Extensions.Options" ||
+            !ConfigurationValueClassifier.IsOptionsWrapper(optionsType) ||
             optionsType.TypeArguments.Length != 1 ||
             optionsType.TypeArguments[0] is not INamedTypeSymbol payload ||
             !payload.Locations.Any(location => location.IsInSource))

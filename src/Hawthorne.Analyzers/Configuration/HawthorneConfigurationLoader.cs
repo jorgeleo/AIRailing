@@ -7,6 +7,37 @@ namespace Hawthorne.Analyzers.Configuration;
 
 internal static class HawthorneConfigurationLoader
 {
+    private static readonly ImmutableDictionary<string, ImmutableHashSet<string>> AllowedRuleProperties =
+        new Dictionary<string, ImmutableHashSet<string>>(StringComparer.Ordinal)
+        {
+            ["HAW001"] = Properties(), ["HAW002"] = Properties(), ["HAW003"] = Properties(),
+            ["HAW004"] = Properties("requireMutableState"),
+            ["HAW005"] = Properties("minimumForwardingMethods", "minimumForwardingRatio", "requireRoleSuffix", "roleSuffixes"),
+            ["HAW006"] = Properties("maximumSharedExecutableStatements", "minimumDerivedTypes", "analyzeSingleClosedGenericUse"),
+            ["HAW007"] = Properties("maximumDependencies", "excludeOptionWrappers", "configurationTypeSuffixes"),
+            ["HAW008"] = Properties("warningParameterCount", "errorParameterCount", "requireDirectControlFlowUse"),
+            ["HAW010"] = Properties("serviceSuffixes", "maximumPhysicalLines", "maximumCyclomaticComplexity", "maximumSourceCallers"),
+            ["HAW011"] = Properties("maxTinyMethodRatio", "tinyMethodStatementLimit", "minimumMethodCount"),
+            ["HAW013"] = Properties("genericExceptionTypes", "reportLogAndRethrow"),
+            ["HAW014"] = Properties("includeInternalMethods"),
+            ["HAW015"] = Properties("includeInternalProperties", "configurationTypeSuffixes"),
+            ["HAW016"] = Properties("ignoreContractMethods", "reportTrivialTaskRun"),
+            ["HAW017"] = Properties("analyzeToList", "analyzeToArray"),
+            ["HAW018"] = Properties("minimumEnumerations"),
+            ["HAW020"] = Properties("minimumForwardingMethods", "minimumForwardingRatio", "repositorySuffixes", "requireRepositorySuffix"),
+            ["HAW021"] = Properties("minimumMethodCount", "maximumTryBlocksPerMethod", "reportCatchAllDefaultReturn"),
+            ["HAW023"] = Properties("includePrivateMembers", "includeExternallyAccessibleMembers", "analyzeEvents", "analyzeCallbacks", "analyzeVirtualHooks"),
+            ["HAW024"] = Properties("reportMissingForwarding", "treatNoneAsMissingForwarding", "ignoreContractMethods"),
+            ["HAW025"] = Properties("minimumForwardingHops", "configurationTypeSuffixes"),
+            ["HAW029"] = Properties("minimumMethodCount", "maximumLifecycleLogRatio", "lifecycleTerms", "loggerTypeNames"),
+            ["HAW030"] = Properties("minimumMethods", "minimumStatements", "minimumSimilarity"),
+            ["HAW100"] = Properties("maximumDensity", "minimumBehavioralTypes", "abstractionRoleSuffixes"),
+            ["HAW101"] = Properties("maximum"), ["HAW102"] = Properties("maximum"),
+            ["HAW103"] = Properties("maximum"), ["HAW104"] = Properties("maximum"),
+            ["HAW105"] = Properties("maximumExecutableStatements", "maximumPhysicalLines"),
+            ["HAW106"] = Properties(), ["HAW900"] = Properties(), ["HAW901"] = Properties(),
+        }.ToImmutableDictionary(StringComparer.Ordinal);
+
     internal static HawthorneConfigurationLoadResult Load(ImmutableArray<AdditionalText> additionalFiles)
     {
         var configurationFiles = additionalFiles
@@ -76,6 +107,23 @@ internal static class HawthorneConfigurationLoader
                 if (rule.Value.ValueKind != JsonValueKind.Object)
                 {
                     return HawthorneConfigurationLoadResult.Invalid($"hawthorne.json.rules.{rule.Name} must be a JSON object.", configurationFiles[0]);
+                }
+
+                var allowedProperties = AllowedRuleProperties[rule.Name];
+                string? unknownPropertyName = null;
+                foreach (var property in rule.Value.EnumerateObject())
+                {
+                    if (!allowedProperties.Contains(property.Name))
+                    {
+                        unknownPropertyName = property.Name;
+                        break;
+                    }
+                }
+                if (unknownPropertyName is not null)
+                {
+                    return HawthorneConfigurationLoadResult.Invalid(
+                        $"hawthorne.json.rules.{rule.Name}.{unknownPropertyName} is not a supported property.",
+                        configurationFiles[0]);
                 }
 
                 var defaultRule = configuration.GetRule(rule.Name);
@@ -380,6 +428,11 @@ internal static class HawthorneConfigurationLoader
 
     private static HawthorneConfiguration CreateDefaults() =>
         HawthorneConfiguration.CreateDefaults(HawthorneDiagnosticDescriptors.All.Select(descriptor => descriptor.Id));
+
+    private static ImmutableHashSet<string> Properties(params string[] ruleSpecificProperties) =>
+        ImmutableHashSet.CreateRange(
+            StringComparer.Ordinal,
+            new[] { "enabled", "severity", "_comment", "_potentialFix" }.Concat(ruleSpecificProperties));
 
     private static bool GetEnabled(string ruleId, JsonElement rule, bool defaultValue, out string? errorMessage)
     {

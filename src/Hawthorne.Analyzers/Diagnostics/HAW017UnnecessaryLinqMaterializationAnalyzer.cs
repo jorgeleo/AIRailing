@@ -1,4 +1,5 @@
 using Hawthorne.Analyzers.Configuration;
+using Hawthorne.Analyzers.Analysis.Architecture;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
@@ -64,6 +65,5 @@ internal static class HAW017UnnecessaryLinqMaterializationAnalyzer
         methodName == "ToArray" && configuration.AnalyzeToArray;
 
     private static bool IsEnumerableOperation(IMethodSymbol method) =>
-        method.ContainingType.Name == "Enumerable" &&
-        method.ContainingNamespace.ToDisplayString() == "System.Linq";
+        EnumerableClassifier.IsLinqOperation(method);
 }

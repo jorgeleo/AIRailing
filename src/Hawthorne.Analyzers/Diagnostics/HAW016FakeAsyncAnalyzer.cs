@@ -21,7 +21,7 @@ internal static class HAW016FakeAsyncAnalyzer
         HawthorneConfiguration configuration)
     {
         if (context.SemanticModel.GetDeclaredSymbol(method) is not IMethodSymbol methodSymbol ||
-            !IsAsynchronousReturnType(methodSymbol.ReturnType) ||
+            !AsyncClassifier.IsAsyncReturnType(methodSymbol.ReturnType) ||
             configuration.FakeAsync.IgnoreContractMethods &&
             ForwardingMethodClassifier.IsRequiredContractMethod(methodSymbol))
         {
@@ -38,12 +38,6 @@ internal static class HAW016FakeAsyncAnalyzer
                 method.Identifier.ValueText);
         }
     }
-
-    private static bool IsAsynchronousReturnType(ITypeSymbol type) =>
-        type is INamedTypeSymbol named &&
-        named.OriginalDefinition.ContainingNamespace.ToDisplayString() == "System.Threading.Tasks" &&
-        named.OriginalDefinition.Name is "Task" or "ValueTask" &&
-        named.OriginalDefinition.Arity is 0 or 1;
 
     private static bool HasAwait(MethodDeclarationSyntax method) =>
         method.DescendantNodes().OfType<AwaitExpressionSyntax>().Any();
@@ -62,7 +56,7 @@ internal static class HAW016FakeAsyncAnalyzer
         return operation is IInvocationOperation invocation &&
             (IsTaskFromResult(invocation) || configuration.ReportTrivialTaskRun && IsTrivialTaskRun(invocation)) ||
             operation is IPropertyReferenceOperation property && IsCompletedTask(property) ||
-            operation is IObjectCreationOperation creation && IsValueTask(creation.Type);
+            operation is IObjectCreationOperation creation && AsyncClassifier.IsValueTask(creation.Type);
     }
 
     private static ExpressionSyntax? GetSingleReturnedExpression(MethodDeclarationSyntax method) =>
@@ -72,27 +66,18 @@ internal static class HAW016FakeAsyncAnalyzer
             : null);
 
     private static bool IsTaskFromResult(IInvocationOperation invocation) =>
-        invocation.TargetMethod.Name == "FromResult" && IsTask(invocation.TargetMethod.ContainingType);
+        invocation.TargetMethod.Name == "FromResult" && AsyncClassifier.IsTask(invocation.TargetMethod.ContainingType);
 
     private static bool IsCompletedTask(IPropertyReferenceOperation property) =>
-        property.Property.Name == "CompletedTask" && IsTask(property.Property.ContainingType);
+        property.Property.Name == "CompletedTask" && AsyncClassifier.IsTask(property.Property.ContainingType);
 
     private static bool IsTrivialTaskRun(IInvocationOperation invocation) =>
         invocation.TargetMethod.Name == "Run" &&
-        IsTask(invocation.TargetMethod.ContainingType) &&
+        AsyncClassifier.IsTask(invocation.TargetMethod.ContainingType) &&
         invocation.Syntax is InvocationExpressionSyntax { ArgumentList.Arguments.Count: 1 } syntax &&
         syntax.ArgumentList.Arguments[0].Expression is LambdaExpressionSyntax
         {
             Body: LiteralExpressionSyntax,
         };
 
-    private static bool IsTask(ITypeSymbol? type) =>
-        type is INamedTypeSymbol named &&
-        named.OriginalDefinition.ContainingNamespace.ToDisplayString() == "System.Threading.Tasks" &&
-        named.OriginalDefinition.Name == "Task";
-
-    private static bool IsValueTask(ITypeSymbol? type) =>
-        type is INamedTypeSymbol named &&
-        named.OriginalDefinition.ContainingNamespace.ToDisplayString() == "System.Threading.Tasks" &&
-        named.OriginalDefinition.Name == "ValueTask";
 }

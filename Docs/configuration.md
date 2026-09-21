@@ -19,5 +19,6 @@ The implemented next-rule options are documented on each page in
 `Docs/rules/`: architecture rules HAW005–HAW015, HAW020, HAW023, HAW025,
 HAW029, and HAW030; reliability rules HAW016–HAW018 and HAW021; cancellation
 plumbing HAW024; and the informational HAW100 abstraction-density metric.
-HAW015 and all Wave 3 heuristics remain opt-in until the project has reviewed
-their source-versus-external-consumer boundary.
+All rules from `Docs/next-rules.md` are enabled by default, including HAW015
+and the Wave 3 rules. Tune their thresholds or disable an individual rule only
+when the project has reviewed its source-versus-external-consumer boundary.
