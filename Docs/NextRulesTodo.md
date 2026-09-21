@@ -9,13 +9,13 @@ without the evidence stated in the plan.
 
 - Current phase: Wave 1 implementation in progress.
 - Last completed item: HAW005, HAW006, HAW007, HAW008, HAW010, HAW011,
-  HAW013, HAW014, HAW016, HAW021, and HAW024 implementation, focused tests,
-  rule documentation, full test suite, and solution build.
-- Next action: implement HAW017 Unnecessary LINQ Materialization from failing
-  focused tests, then add the shared configuration-flow index for HAW015.
-- In progress: HAW017 focused tests are intentionally red while its typed
-  options and operation analyzer are being added. The LINQ test setup exposed
-  and fixed an HAW104 error-symbol recursion in `CouplingInventory`.
+  HAW013, HAW014, HAW016, HAW017, HAW018, HAW021, and HAW024
+  implementation, focused tests, rule documentation, full test suite, and
+  solution build.
+- Next action: implement HAW015 Dead Configuration with the shared
+  configuration-flow index from failing focused tests.
+- The HAW017 LINQ test setup exposed and fixed an HAW104 error-symbol
+  recursion in `CouplingInventory`.
 - Blockers: none identified. The five title-only candidates have conservative
   contracts in the plan and require calibration before default enablement.
 
@@ -71,9 +71,9 @@ without the evidence stated in the plan.
   source call nullability evidence; test nullable/public/unknown-call paths.
 - [ ] HAW015: implement the conservative unused private configuration-property
   contract; test binding, meaningful reads, and external-contract exclusions.
-- [ ] HAW017: implement immediate `ToList`/`ToArray` chain detection; test
+- [x] HAW017: implement immediate `ToList`/`ToArray` chain detection; test
   every supported LINQ receiver plus mutations and returned collections.
-- [ ] HAW018: implement same-block repeated enumeration evidence; test known
+- [x] HAW018: implement same-block repeated enumeration evidence; test known
   collection exclusions, materialization/reassignment, and boundary count.
 - [ ] Calibrate Wave 2 against the required repository set and adjust only the
   documented contracts/options.

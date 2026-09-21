@@ -222,6 +222,34 @@ internal static class HawthorneConfigurationLoader
 
                     configuration = configuration.WithFakeAsync(fakeAsync);
                 }
+                if (rule.Name == "HAW017")
+                {
+                    var materialization = GetUnnecessaryLinqMaterialization(
+                        rule.Name,
+                        rule.Value,
+                        configuration.UnnecessaryLinqMaterialization,
+                        out var materializationError);
+                    if (materializationError is not null)
+                    {
+                        return HawthorneConfigurationLoadResult.Invalid(materializationError, configurationFiles[0]);
+                    }
+
+                    configuration = configuration.WithUnnecessaryLinqMaterialization(materialization);
+                }
+                if (rule.Name == "HAW018")
+                {
+                    var repeatedEnumeration = GetRepeatedEnumeration(
+                        rule.Name,
+                        rule.Value,
+                        configuration.RepeatedEnumeration,
+                        out var repeatedEnumerationError);
+                    if (repeatedEnumerationError is not null)
+                    {
+                        return HawthorneConfigurationLoadResult.Invalid(repeatedEnumerationError, configurationFiles[0]);
+                    }
+
+                    configuration = configuration.WithRepeatedEnumeration(repeatedEnumeration);
+                }
                 if (rule.Name == "HAW021")
                 {
                     var excessiveTryCatch = GetExcessiveTryCatch(
@@ -577,6 +605,34 @@ internal static class HawthorneConfigurationLoader
             : defaults;
     }
 
+    private static Hawthorne017Configuration GetUnnecessaryLinqMaterialization(
+        string ruleId,
+        JsonElement rule,
+        Hawthorne017Configuration defaults,
+        out string? errorMessage)
+    {
+        var analyzeToList = GetBoolean(
+            ruleId,
+            rule,
+            "analyzeToList",
+            defaults.AnalyzeToList,
+            out errorMessage);
+        if (errorMessage is not null)
+        {
+            return defaults;
+        }
+
+        var analyzeToArray = GetBoolean(
+            ruleId,
+            rule,
+            "analyzeToArray",
+            defaults.AnalyzeToArray,
+            out errorMessage);
+        return errorMessage is null
+            ? new Hawthorne017Configuration(analyzeToList, analyzeToArray)
+            : defaults;
+    }
+
     private static Hawthorne021Configuration GetExcessiveTryCatch(
         string ruleId,
         JsonElement rule,
@@ -617,6 +673,21 @@ internal static class HawthorneConfigurationLoader
                 maximumTryBlocksPerMethod,
                 reportCatchAllDefaultReturn)
             : defaults;
+    }
+
+    private static Hawthorne018Configuration GetRepeatedEnumeration(
+        string ruleId,
+        JsonElement rule,
+        Hawthorne018Configuration defaults,
+        out string? errorMessage)
+    {
+        var minimumEnumerations = GetPositiveInteger(
+            ruleId,
+            rule,
+            "minimumEnumerations",
+            defaults.MinimumEnumerations,
+            out errorMessage);
+        return errorMessage is null ? new Hawthorne018Configuration(minimumEnumerations) : defaults;
     }
 
     private static Hawthorne013Configuration GetExceptionLaundering(
