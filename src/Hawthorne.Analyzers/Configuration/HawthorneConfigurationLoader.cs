@@ -82,7 +82,7 @@ internal static class HawthorneConfigurationLoader
                 configuration = configuration.WithRule(rule.Name, new HawthorneRuleConfiguration(enabled, severity));
                 if (rule.Name == "HAW105")
                 {
-                    var methodLength = GetMethodLength(rule.Value, configuration.MethodLength, out var methodLengthError);
+                    var methodLength = GetMethodLength(rule.Name, rule.Value, configuration.MethodLength, out var methodLengthError);
                     if (methodLengthError is not null)
                     {
                         return HawthorneConfigurationLoadResult.Invalid(methodLengthError, configurationFiles[0]);
@@ -92,20 +92,20 @@ internal static class HawthorneConfigurationLoader
                 }
                 if (rule.Name == "HAW103")
                 {
-                    var maximum = GetPositiveInteger(rule.Value, "maximum", configuration.MaximumNestingDepth, out var error);
-                    if (error is not null) return HawthorneConfigurationLoadResult.Invalid(error.Replace("HAW105", "HAW103"), configurationFiles[0]);
+                    var maximum = GetPositiveInteger(rule.Name, rule.Value, "maximum", configuration.MaximumNestingDepth, out var error);
+                    if (error is not null) return HawthorneConfigurationLoadResult.Invalid(error, configurationFiles[0]);
                     configuration = configuration.WithMaximumNestingDepth(maximum);
                 }
                 if (rule.Name == "HAW101")
                 {
-                    var maximum = GetPositiveInteger(rule.Value, "maximum", configuration.MaximumCyclomaticComplexity, out var error);
-                    if (error is not null) return HawthorneConfigurationLoadResult.Invalid(error.Replace("HAW105", "HAW101"), configurationFiles[0]);
+                    var maximum = GetPositiveInteger(rule.Name, rule.Value, "maximum", configuration.MaximumCyclomaticComplexity, out var error);
+                    if (error is not null) return HawthorneConfigurationLoadResult.Invalid(error, configurationFiles[0]);
                     configuration = configuration.WithMaximumCyclomaticComplexity(maximum);
                 }
                 if (rule.Name == "HAW102")
                 {
-                    var maximum = GetPositiveInteger(rule.Value, "maximum", configuration.MaximumCognitiveComplexity, out var error);
-                    if (error is not null) return HawthorneConfigurationLoadResult.Invalid(error.Replace("HAW105", "HAW102"), configurationFiles[0]);
+                    var maximum = GetPositiveInteger(rule.Name, rule.Value, "maximum", configuration.MaximumCognitiveComplexity, out var error);
+                    if (error is not null) return HawthorneConfigurationLoadResult.Invalid(error, configurationFiles[0]);
                     configuration = configuration.WithMaximumCognitiveComplexity(maximum);
                 }
                 if (rule.Name == "HAW004" && rule.Value.TryGetProperty("requireMutableState", out var mutableState))
@@ -116,8 +116,8 @@ internal static class HawthorneConfigurationLoader
                 }
                 if (rule.Name == "HAW104")
                 {
-                    var maximum = GetPositiveInteger(rule.Value, "maximum", configuration.MaximumClassCoupling, out var error);
-                    if (error is not null) return HawthorneConfigurationLoadResult.Invalid(error.Replace("HAW105", "HAW104"), configurationFiles[0]);
+                    var maximum = GetPositiveInteger(rule.Name, rule.Value, "maximum", configuration.MaximumClassCoupling, out var error);
+                    if (error is not null) return HawthorneConfigurationLoadResult.Invalid(error, configurationFiles[0]);
                     configuration = configuration.WithMaximumClassCoupling(maximum);
                 }
             }
@@ -240,19 +240,19 @@ internal static class HawthorneConfigurationLoader
         return default;
     }
 
-    private static Hawthorne105Configuration GetMethodLength(JsonElement rule, Hawthorne105Configuration defaults, out string? errorMessage)
+    private static Hawthorne105Configuration GetMethodLength(string ruleId, JsonElement rule, Hawthorne105Configuration defaults, out string? errorMessage)
     {
-        var statements = GetPositiveInteger(rule, "maximumExecutableStatements", defaults.MaximumExecutableStatements, out errorMessage);
+        var statements = GetPositiveInteger(ruleId, rule, "maximumExecutableStatements", defaults.MaximumExecutableStatements, out errorMessage);
         if (errorMessage is not null)
         {
             return defaults;
         }
 
-        var lines = GetPositiveInteger(rule, "maximumPhysicalLines", defaults.MaximumPhysicalLines, out errorMessage);
+        var lines = GetPositiveInteger(ruleId, rule, "maximumPhysicalLines", defaults.MaximumPhysicalLines, out errorMessage);
         return errorMessage is null ? new Hawthorne105Configuration(statements, lines) : defaults;
     }
 
-    private static int GetPositiveInteger(JsonElement rule, string propertyName, int defaultValue, out string? errorMessage)
+    private static int GetPositiveInteger(string ruleId, JsonElement rule, string propertyName, int defaultValue, out string? errorMessage)
     {
         if (!rule.TryGetProperty(propertyName, out var value))
         {
@@ -266,7 +266,7 @@ internal static class HawthorneConfigurationLoader
             return parsed;
         }
 
-        errorMessage = $"hawthorne.json.rules.HAW105.{propertyName} must be an integer greater than zero.";
+        errorMessage = $"hawthorne.json.rules.{ruleId}.{propertyName} must be an integer greater than zero.";
         return defaultValue;
     }
 }

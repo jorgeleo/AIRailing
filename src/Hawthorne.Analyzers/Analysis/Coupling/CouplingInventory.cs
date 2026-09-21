@@ -51,6 +51,24 @@ internal sealed class CouplingInventory
         .Take(5)
         .Select(type => type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)));
 
-    private static bool IsTransparentWrapper(INamedTypeSymbol type) =>
-        type.Name is "Task" or "ValueTask" or "List" or "IEnumerable" or "ICollection" or "Dictionary" or "Nullable";
+    private static bool IsTransparentWrapper(INamedTypeSymbol type)
+    {
+        if (type.IsGenericType && !type.IsUnboundGenericType)
+        {
+            return IsTransparentWrapper(type.ConstructUnboundGenericType());
+        }
+
+        var containingNamespace = type.ContainingNamespace.ToDisplayString();
+        return (containingNamespace, type.Name) is
+            ("System.Collections.Generic", "List") or
+            ("System.Collections.Generic", "IEnumerable") or
+            ("System.Collections.Generic", "ICollection") or
+            ("System.Collections.Generic", "Dictionary") or
+            ("System.Collections", "IEnumerable") or
+            ("System.Collections", "ICollection") or
+            ("System.Collections", "Dictionary") or
+            ("System.Threading.Tasks", "Task") or
+            ("System.Threading.Tasks", "ValueTask") or
+            ("System", "Nullable");
+    }
 }
