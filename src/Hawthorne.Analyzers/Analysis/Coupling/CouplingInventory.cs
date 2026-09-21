@@ -53,9 +53,15 @@ internal sealed class CouplingInventory
 
     private static bool IsTransparentWrapper(INamedTypeSymbol type)
     {
-        if (type.IsGenericType && !type.IsUnboundGenericType)
+        if (type.TypeKind == TypeKind.Error)
         {
-            return IsTransparentWrapper(type.ConstructUnboundGenericType());
+            return false;
+        }
+
+        var definition = type.OriginalDefinition;
+        if (!SymbolEqualityComparer.Default.Equals(type, definition))
+        {
+            return IsTransparentWrapper(definition);
         }
 
         var containingNamespace = type.ContainingNamespace.ToDisplayString();

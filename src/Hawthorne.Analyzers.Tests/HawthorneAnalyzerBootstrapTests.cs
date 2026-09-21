@@ -396,7 +396,7 @@ public sealed class HawthorneAnalyzerBootstrapTests
     public async Task Analyze_WhenOverrideForwardsToItsDependency_DoesNotReportHAW003()
     {
         var compilation = CSharpCompilation.Create("TestAssembly",
-            new[] { CSharpSyntaxTree.ParseText("abstract class Base { public abstract int Get(int value); } class Service { public int Get(int value) => value; } class Adapter : Base { private readonly Service service = new Service(); public override int Get(int value) => service.Get(value); }") },
+            new[] { CSharpSyntaxTree.ParseText("abstract class Base { public abstract int Get(int value); } class Service { public int Get(int value) => value; } class Adapter : Base { private readonly Service service = new Service(); public override int Get(int value) => service.Get(value); } class AlternativeAdapter : Base { public override int Get(int value) => value; }") },
             new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
 
         var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();

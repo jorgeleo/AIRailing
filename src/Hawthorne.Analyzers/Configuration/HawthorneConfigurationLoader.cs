@@ -110,6 +110,20 @@ internal static class HawthorneConfigurationLoader
 
                     configuration = configuration.WithWrapper(wrapper);
                 }
+                if (rule.Name == "HAW006")
+                {
+                    var prematureGeneralization = GetPrematureGeneralization(
+                        rule.Name,
+                        rule.Value,
+                        configuration.PrematureGeneralization,
+                        out var prematureGeneralizationError);
+                    if (prematureGeneralizationError is not null)
+                    {
+                        return HawthorneConfigurationLoadResult.Invalid(prematureGeneralizationError, configurationFiles[0]);
+                    }
+
+                    configuration = configuration.WithPrematureGeneralization(prematureGeneralization);
+                }
                 if (rule.Name == "HAW007")
                 {
                     var dependencies = GetConstructorDependencies(
@@ -137,6 +151,104 @@ internal static class HawthorneConfigurationLoader
                     }
 
                     configuration = configuration.WithBooleanControlFlow(booleanControlFlow);
+                }
+                if (rule.Name == "HAW010")
+                {
+                    var oneMethodServices = GetOneMethodServices(
+                        rule.Name,
+                        rule.Value,
+                        configuration.OneMethodServices,
+                        out var oneMethodServiceError);
+                    if (oneMethodServiceError is not null)
+                    {
+                        return HawthorneConfigurationLoadResult.Invalid(oneMethodServiceError, configurationFiles[0]);
+                    }
+
+                    configuration = configuration.WithOneMethodServices(oneMethodServices);
+                }
+                if (rule.Name == "HAW011")
+                {
+                    var excessiveMicroMethods = GetExcessiveMicroMethods(
+                        rule.Name,
+                        rule.Value,
+                        configuration.ExcessiveMicroMethods,
+                        out var excessiveMicroMethodsError);
+                    if (excessiveMicroMethodsError is not null)
+                    {
+                        return HawthorneConfigurationLoadResult.Invalid(excessiveMicroMethodsError, configurationFiles[0]);
+                    }
+
+                    configuration = configuration.WithExcessiveMicroMethods(excessiveMicroMethods);
+                }
+                if (rule.Name == "HAW013")
+                {
+                    var exceptionLaundering = GetExceptionLaundering(
+                        rule.Name,
+                        rule.Value,
+                        configuration.ExceptionLaundering,
+                        out var exceptionLaunderingError);
+                    if (exceptionLaunderingError is not null)
+                    {
+                        return HawthorneConfigurationLoadResult.Invalid(exceptionLaunderingError, configurationFiles[0]);
+                    }
+
+                    configuration = configuration.WithExceptionLaundering(exceptionLaundering);
+                }
+                if (rule.Name == "HAW014")
+                {
+                    var defensiveNullChecking = GetDefensiveNullChecking(
+                        rule.Name,
+                        rule.Value,
+                        configuration.DefensiveNullChecking,
+                        out var defensiveNullCheckingError);
+                    if (defensiveNullCheckingError is not null)
+                    {
+                        return HawthorneConfigurationLoadResult.Invalid(defensiveNullCheckingError, configurationFiles[0]);
+                    }
+
+                    configuration = configuration.WithDefensiveNullChecking(defensiveNullChecking);
+                }
+                if (rule.Name == "HAW016")
+                {
+                    var fakeAsync = GetFakeAsync(
+                        rule.Name,
+                        rule.Value,
+                        configuration.FakeAsync,
+                        out var fakeAsyncError);
+                    if (fakeAsyncError is not null)
+                    {
+                        return HawthorneConfigurationLoadResult.Invalid(fakeAsyncError, configurationFiles[0]);
+                    }
+
+                    configuration = configuration.WithFakeAsync(fakeAsync);
+                }
+                if (rule.Name == "HAW021")
+                {
+                    var excessiveTryCatch = GetExcessiveTryCatch(
+                        rule.Name,
+                        rule.Value,
+                        configuration.ExcessiveTryCatch,
+                        out var excessiveTryCatchError);
+                    if (excessiveTryCatchError is not null)
+                    {
+                        return HawthorneConfigurationLoadResult.Invalid(excessiveTryCatchError, configurationFiles[0]);
+                    }
+
+                    configuration = configuration.WithExcessiveTryCatch(excessiveTryCatch);
+                }
+                if (rule.Name == "HAW024")
+                {
+                    var cancellationTokens = GetCancellationTokens(
+                        rule.Name,
+                        rule.Value,
+                        configuration.CancellationTokens,
+                        out var cancellationTokenError);
+                    if (cancellationTokenError is not null)
+                    {
+                        return HawthorneConfigurationLoadResult.Invalid(cancellationTokenError, configurationFiles[0]);
+                    }
+
+                    configuration = configuration.WithCancellationTokens(cancellationTokens);
                 }
                 if (rule.Name == "HAW105")
                 {
@@ -311,6 +423,48 @@ internal static class HawthorneConfigurationLoader
             : defaults;
     }
 
+    private static Hawthorne006Configuration GetPrematureGeneralization(
+        string ruleId,
+        JsonElement rule,
+        Hawthorne006Configuration defaults,
+        out string? errorMessage)
+    {
+        var maximumSharedStatements = GetPositiveInteger(
+            ruleId,
+            rule,
+            "maximumSharedExecutableStatements",
+            defaults.MaximumSharedExecutableStatements,
+            out errorMessage);
+        if (errorMessage is not null)
+        {
+            return defaults;
+        }
+
+        var minimumDerivedTypes = GetPositiveInteger(
+            ruleId,
+            rule,
+            "minimumDerivedTypes",
+            defaults.MinimumDerivedTypes,
+            out errorMessage);
+        if (errorMessage is not null)
+        {
+            return defaults;
+        }
+
+        var analyzeSingleClosedGenericUse = GetBoolean(
+            ruleId,
+            rule,
+            "analyzeSingleClosedGenericUse",
+            defaults.AnalyzeSingleClosedGenericUse,
+            out errorMessage);
+        return errorMessage is null
+            ? new Hawthorne006Configuration(
+                maximumSharedStatements,
+                minimumDerivedTypes,
+                analyzeSingleClosedGenericUse)
+            : defaults;
+    }
+
     private static Hawthorne007Configuration GetConstructorDependencies(
         string ruleId,
         JsonElement rule,
@@ -392,6 +546,252 @@ internal static class HawthorneConfigurationLoader
             out errorMessage);
         return errorMessage is null
             ? new Hawthorne008Configuration(warningCount, errorCount, requiresDirectUse)
+            : defaults;
+    }
+
+    private static Hawthorne016Configuration GetFakeAsync(
+        string ruleId,
+        JsonElement rule,
+        Hawthorne016Configuration defaults,
+        out string? errorMessage)
+    {
+        var ignoreContractMethods = GetBoolean(
+            ruleId,
+            rule,
+            "ignoreContractMethods",
+            defaults.IgnoreContractMethods,
+            out errorMessage);
+        if (errorMessage is not null)
+        {
+            return defaults;
+        }
+
+        var reportTrivialTaskRun = GetBoolean(
+            ruleId,
+            rule,
+            "reportTrivialTaskRun",
+            defaults.ReportTrivialTaskRun,
+            out errorMessage);
+        return errorMessage is null
+            ? new Hawthorne016Configuration(ignoreContractMethods, reportTrivialTaskRun)
+            : defaults;
+    }
+
+    private static Hawthorne021Configuration GetExcessiveTryCatch(
+        string ruleId,
+        JsonElement rule,
+        Hawthorne021Configuration defaults,
+        out string? errorMessage)
+    {
+        var minimumMethodCount = GetPositiveInteger(
+            ruleId,
+            rule,
+            "minimumMethodCount",
+            defaults.MinimumMethodCount,
+            out errorMessage);
+        if (errorMessage is not null)
+        {
+            return defaults;
+        }
+
+        var maximumTryBlocksPerMethod = GetUnitIntervalDouble(
+            ruleId,
+            rule,
+            "maximumTryBlocksPerMethod",
+            defaults.MaximumTryBlocksPerMethod,
+            out errorMessage);
+        if (errorMessage is not null)
+        {
+            return defaults;
+        }
+
+        var reportCatchAllDefaultReturn = GetBoolean(
+            ruleId,
+            rule,
+            "reportCatchAllDefaultReturn",
+            defaults.ReportCatchAllDefaultReturn,
+            out errorMessage);
+        return errorMessage is null
+            ? new Hawthorne021Configuration(
+                minimumMethodCount,
+                maximumTryBlocksPerMethod,
+                reportCatchAllDefaultReturn)
+            : defaults;
+    }
+
+    private static Hawthorne013Configuration GetExceptionLaundering(
+        string ruleId,
+        JsonElement rule,
+        Hawthorne013Configuration defaults,
+        out string? errorMessage)
+    {
+        var genericExceptionTypes = GetNonEmptyStringArray(
+            ruleId,
+            rule,
+            "genericExceptionTypes",
+            defaults.GenericExceptionTypes,
+            out errorMessage);
+        if (errorMessage is not null)
+        {
+            return defaults;
+        }
+
+        var reportLogAndRethrow = GetBoolean(
+            ruleId,
+            rule,
+            "reportLogAndRethrow",
+            defaults.ReportLogAndRethrow,
+            out errorMessage);
+        return errorMessage is null
+            ? new Hawthorne013Configuration(genericExceptionTypes, reportLogAndRethrow)
+            : defaults;
+    }
+
+    private static Hawthorne014Configuration GetDefensiveNullChecking(
+        string ruleId,
+        JsonElement rule,
+        Hawthorne014Configuration defaults,
+        out string? errorMessage)
+    {
+        var includeInternalMethods = GetBoolean(
+            ruleId,
+            rule,
+            "includeInternalMethods",
+            defaults.IncludeInternalMethods,
+            out errorMessage);
+        return errorMessage is null
+            ? new Hawthorne014Configuration(includeInternalMethods)
+            : defaults;
+    }
+
+    private static Hawthorne010Configuration GetOneMethodServices(
+        string ruleId,
+        JsonElement rule,
+        Hawthorne010Configuration defaults,
+        out string? errorMessage)
+    {
+        var suffixes = GetNonEmptyStringArray(
+            ruleId,
+            rule,
+            "serviceSuffixes",
+            defaults.ServiceSuffixes,
+            out errorMessage);
+        if (errorMessage is not null)
+        {
+            return defaults;
+        }
+
+        var physicalLines = GetPositiveInteger(
+            ruleId,
+            rule,
+            "maximumPhysicalLines",
+            defaults.MaximumPhysicalLines,
+            out errorMessage);
+        if (errorMessage is not null)
+        {
+            return defaults;
+        }
+
+        var cyclomaticComplexity = GetPositiveInteger(
+            ruleId,
+            rule,
+            "maximumCyclomaticComplexity",
+            defaults.MaximumCyclomaticComplexity,
+            out errorMessage);
+        if (errorMessage is not null)
+        {
+            return defaults;
+        }
+
+        var sourceCallers = GetPositiveInteger(
+            ruleId,
+            rule,
+            "maximumSourceCallers",
+            defaults.MaximumSourceCallers,
+            out errorMessage);
+        return errorMessage is null
+            ? new Hawthorne010Configuration(suffixes, physicalLines, cyclomaticComplexity, sourceCallers)
+            : defaults;
+    }
+
+    private static Hawthorne011Configuration GetExcessiveMicroMethods(
+        string ruleId,
+        JsonElement rule,
+        Hawthorne011Configuration defaults,
+        out string? errorMessage)
+    {
+        var maximumRatio = GetUnitIntervalDouble(
+            ruleId,
+            rule,
+            "maxTinyMethodRatio",
+            defaults.MaxTinyMethodRatio,
+            out errorMessage);
+        if (errorMessage is not null)
+        {
+            return defaults;
+        }
+
+        var tinyMethodStatementLimit = GetPositiveInteger(
+            ruleId,
+            rule,
+            "tinyMethodStatementLimit",
+            defaults.TinyMethodStatementLimit,
+            out errorMessage);
+        if (errorMessage is not null)
+        {
+            return defaults;
+        }
+
+        var minimumMethodCount = GetPositiveInteger(
+            ruleId,
+            rule,
+            "minimumMethodCount",
+            defaults.MinimumMethodCount,
+            out errorMessage);
+        return errorMessage is null
+            ? new Hawthorne011Configuration(maximumRatio, tinyMethodStatementLimit, minimumMethodCount)
+            : defaults;
+    }
+
+    private static Hawthorne024Configuration GetCancellationTokens(
+        string ruleId,
+        JsonElement rule,
+        Hawthorne024Configuration defaults,
+        out string? errorMessage)
+    {
+        var reportMissingForwarding = GetBoolean(
+            ruleId,
+            rule,
+            "reportMissingForwarding",
+            defaults.ReportMissingForwarding,
+            out errorMessage);
+        if (errorMessage is not null)
+        {
+            return defaults;
+        }
+
+        var treatNoneAsMissingForwarding = GetBoolean(
+            ruleId,
+            rule,
+            "treatNoneAsMissingForwarding",
+            defaults.TreatNoneAsMissingForwarding,
+            out errorMessage);
+        if (errorMessage is not null)
+        {
+            return defaults;
+        }
+
+        var ignoreContractMethods = GetBoolean(
+            ruleId,
+            rule,
+            "ignoreContractMethods",
+            defaults.IgnoreContractMethods,
+            out errorMessage);
+        return errorMessage is null
+            ? new Hawthorne024Configuration(
+                reportMissingForwarding,
+                treatNoneAsMissingForwarding,
+                ignoreContractMethods)
             : defaults;
     }
 

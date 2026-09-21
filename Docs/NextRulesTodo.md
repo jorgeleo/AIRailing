@@ -8,9 +8,14 @@ without the evidence stated in the plan.
 ## Current status
 
 - Current phase: Wave 1 implementation in progress.
-- Last completed item: HAW005, HAW007, and HAW008 implementation, focused tests, rule
-  documentation, full test suite, and solution build.
-- Next action: implement HAW016 Fake Async from failing focused tests.
+- Last completed item: HAW005, HAW006, HAW007, HAW008, HAW010, HAW011,
+  HAW013, HAW014, HAW016, HAW021, and HAW024 implementation, focused tests,
+  rule documentation, full test suite, and solution build.
+- Next action: implement HAW017 Unnecessary LINQ Materialization from failing
+  focused tests, then add the shared configuration-flow index for HAW015.
+- In progress: HAW017 focused tests are intentionally red while its typed
+  options and operation analyzer are being added. The LINQ test setup exposed
+  and fixed an HAW104 error-symbol recursion in `CouplingInventory`.
 - Blockers: none identified. The five title-only candidates have conservative
   contracts in the plan and require calibration before default enablement.
 
@@ -43,26 +48,26 @@ without the evidence stated in the plan.
   scalar/options/config exclusions and the 7/8 boundary.
 - [x] HAW008: implement direct boolean-control-flow counting and warning/error
   escalation; test data-only flags, contracts, and both boundaries.
-- [ ] HAW016: implement sync-completed task and async-without-await detection;
+- [x] HAW016: implement sync-completed task and async-without-await detection;
   test real async, contracts, and default-off `Task.Run` heuristic.
-- [ ] HAW024: implement unused-token and lost-forwarding detection; test token
+- [x] HAW024: implement unused-token and lost-forwarding detection; test token
   reads, token-aware overloads, `CancellationToken.None`, and deduplication.
-- [ ] HAW010: implement one-method service evidence plus source caller index;
+- [x] HAW010: implement one-method service evidence plus source caller index;
   test line/complexity/caller boundaries and interface exclusions.
-- [ ] HAW013: implement generic exception wrapping detection; test meaningful
+- [x] HAW013: implement generic exception wrapping detection; test meaningful
   context, specific translation, rethrow, and default-off log/rethrow behavior.
-- [ ] HAW006: implement derived-type and closed-generic-use indexing; test
-  shared behavior and external/reference exclusions.
-- [ ] HAW021: implement catch-all default-return and try-density signals; test
+- [x] HAW006: implement derived-type and closed-generic-use indexing; test
+  shared behavior, generic-use, configuration, and suppression boundaries.
+- [x] HAW021: implement catch-all default-return and try-density signals; test
   separation from HAW013 and all density boundaries.
 - [ ] Calibrate HAW005, HAW006, HAW007, HAW008, HAW010, HAW013, HAW016,
   HAW021, and HAW024; record decisions before enabling their warning defaults.
 
 ## Wave 2 — local behavioral and collection rules
 
-- [ ] HAW011: implement tiny-private-method metric and exact ratio/boundary
+- [x] HAW011: implement tiny-private-method metric and exact ratio/boundary
   tests.
-- [ ] HAW014: implement private non-nullable redundant-guard analysis with
+- [x] HAW014: implement private non-nullable redundant-guard analysis with
   source call nullability evidence; test nullable/public/unknown-call paths.
 - [ ] HAW015: implement the conservative unused private configuration-property
   contract; test binding, meaningful reads, and external-contract exclusions.

@@ -38,8 +38,16 @@ public sealed class HawthorneAnalyzerBootstrap : DiagnosticAnalyzer
             HAW004SingletonAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW002TrivialFactoryAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW005NeedlessWrapperAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
+            HAW006PrematureGeneralizationAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW007ConstructorDependencyAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW008BooleanParameterControlFlowAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
+            HAW010OneMethodServiceAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
+            HAW011ExcessiveMicroMethodsAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
+            HAW013ExceptionLaunderingAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
+            HAW014DefensiveNullCheckingAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
+            HAW016FakeAsyncAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
+            HAW021ExcessiveTryCatchAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
+            HAW024CancellationTokenAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW003PassThroughAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW104CouplingAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW001SingleImplementationAnalyzer.Register(compilationStartContext, hawthorneConfiguration);

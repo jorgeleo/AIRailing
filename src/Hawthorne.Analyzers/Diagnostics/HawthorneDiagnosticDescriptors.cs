@@ -40,7 +40,7 @@ internal static class HawthorneDiagnosticDescriptors
     internal static readonly DiagnosticDescriptor HAW006 = CreateArchitectureWarning(
         "HAW006",
         "Premature generalization",
-        "Abstract type '{0}' has one demonstrated use and no significant shared behavior. Use the concrete type until another use justifies the abstraction.");
+        "Abstract type '{0}' has {1} and no significant shared behavior. Use the concrete type until another use justifies the abstraction.");
 
     internal static readonly DiagnosticDescriptor HAW007 = CreateArchitectureWarning(
         "HAW007",
@@ -100,7 +100,7 @@ internal static class HawthorneDiagnosticDescriptors
     internal static readonly DiagnosticDescriptor HAW021 = CreateReliabilityWarning(
         "HAW021",
         "Excessive try/catch",
-        "Type '{0}' has {1:F2} try blocks per eligible method; maximum allowed is {2:F2}. Handle failures where recovery is possible and remove redundant catch blocks.");
+        "Excessive try/catch: {0}");
 
     internal static readonly DiagnosticDescriptor HAW023 = CreateArchitectureWarning(
         "HAW023",
