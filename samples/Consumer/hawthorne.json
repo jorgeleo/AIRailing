@@ -1,56 +1,67 @@
 {
   "_comment": "Hawthorne analyzer configuration. Rules are warnings by default. Use SuppressMessageAttribute with a non-blank Justification for intentional source-level suppressions.",
+  "_potentialFix": "First fix the code using the rule-specific guidance below. Strongly prefer refactoring, simplifying, or redesigning the code over suppression. Use SuppressMessageAttribute only when the diagnostic is intentional, unavoidable, and there is no other way to fix it; every use must include a specific, non-blank Justification.",
   "version": 1,
   "rules": {
     "_comment": "Each rule can set enabled and severity. Metric rules also define their maximum thresholds.",
+    "_potentialFix": "Use each rule's potentialFix guidance to change the code. Do not suppress a rule unless the violation is intentional and unavoidable.",
 
     "HAW001": {
       "_comment": "Reports interfaces with exactly one concrete implementation in this compilation. Disabled here for this sample.",
+      "_potentialFix": "Remove the unnecessary interface and depend on the concrete type, or add a second real implementation when polymorphism is required. Keep the interface only for a genuine runtime, testing, plugin, or external contract boundary.",
       "enabled": false,
       "severity": "warning"
     },
     "HAW002": {
       "_comment": "Reports factories that always construct one fixed type without meaningful selection, configuration, or lifecycle behavior.",
+      "_potentialFix": "Instantiate the concrete type directly, or make the factory perform meaningful selection, configuration, initialization, or lifecycle management. Remove the factory when it only forwards to one constructor.",
       "enabled": true,
       "severity": "warning"
     },
     "HAW003": {
       "_comment": "Reports pass-through methods and types whose members mostly forward calls without adding behavior.",
+      "_potentialFix": "Call the dependency directly or remove the forwarding layer. If the boundary is necessary, add real validation, transformation, state management, policy, error handling, or another responsibility that justifies the indirection.",
       "enabled": true,
       "severity": "warning"
     },
     "HAW004": {
       "_comment": "Reports static shared instances that expose mutable state. requireMutableState controls whether mutable state is required.",
+      "_potentialFix": "Replace the static mutable instance with dependency injection and an explicit service lifetime. Move mutable state behind an instance, make shared data immutable, or isolate state ownership instead of hiding it globally.",
       "enabled": true,
       "severity": "warning",
       "requireMutableState": true
     },
     "HAW101": {
       "_comment": "Reports methods whose cyclomatic complexity exceeds maximum.",
+      "_potentialFix": "Split the method into focused methods, extract branch-specific strategies, use guard clauses, simplify conditionals, or replace repetitive branching with a data-driven lookup. Reduce the number of independent paths rather than suppressing the diagnostic.",
       "enabled": true,
       "severity": "warning",
       "maximum": 10
     },
     "HAW102": {
       "_comment": "Reports methods whose cognitive complexity exceeds maximum.",
+      "_potentialFix": "Flatten nested logic with guard clauses, extract focused methods, simplify boolean expressions, and use clear named operations or strategies. Reduce the mental branching needed to understand the method.",
       "enabled": true,
       "severity": "warning",
       "maximum": 15
     },
     "HAW103": {
       "_comment": "Reports methods whose control-flow nesting depth exceeds maximum.",
+      "_potentialFix": "Use guard clauses, return early, extract nested operations into focused methods, and replace deeply nested conditionals with clearer control-flow or strategy objects.",
       "enabled": true,
       "severity": "warning",
       "maximum": 4
     },
     "HAW104": {
       "_comment": "Reports types that depend on more distinct external types than maximum.",
+      "_potentialFix": "Split the type by responsibility, extract cohesive collaborators, reduce constructor and field dependencies, and expose narrower focused boundaries. Remove dependencies that are only used by unrelated responsibilities.",
       "enabled": true,
       "severity": "warning",
       "maximum": 12
     },
     "HAW105": {
       "_comment": "Reports methods longer than either configured executable-statement or physical-line limit.",
+      "_potentialFix": "Split the method into focused operations, extract cohesive helpers, remove duplicated steps, and replace long procedural sequences with smaller domain operations or data-driven logic.",
       "enabled": true,
       "severity": "warning",
       "maximumExecutableStatements": 30,
@@ -58,11 +69,13 @@
     },
     "HAW900": {
       "_comment": "Reports invalid hawthorne.json content as a compiler error. This diagnostic is always an error when configuration is invalid.",
+      "_potentialFix": "Correct the JSON syntax and schema: use version 1, valid rule IDs, boolean enabled values, supported severity names, positive numeric thresholds, and no obsolete exceptions property.",
       "enabled": true,
       "severity": "error"
     },
     "HAW901": {
       "_comment": "Reports Hawthorne pragma suppression and SuppressMessageAttribute entries whose Justification is missing or blank.",
+      "_potentialFix": "Remove the pragma or SuppressMessageAttribute and fix the underlying code. Only if the diagnostic is intentional and unavoidable, use SuppressMessageAttribute with a specific non-blank Justification; suppression is a last resort, not a way to bypass the rule.",
       "enabled": true,
       "severity": "warning"
     }

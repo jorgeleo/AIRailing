@@ -63,7 +63,7 @@ internal static class HawthorneConfigurationLoader
 
             foreach (var rule in rules.EnumerateObject())
             {
-                if (rule.Name == "_comment")
+                if (rule.Name is "_comment" or "_potentialFix")
                 {
                     continue;
                 }

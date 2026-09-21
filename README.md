@@ -90,8 +90,9 @@ A complete example:
 ```
 
 - `version` must be `1`.
-- `_comment` properties are optional metadata for human and AI readers and are
-  ignored by the analyzer.
+- `_comment` and `_potentialFix` properties are optional metadata for human and
+  AI readers and are ignored by the analyzer. `_potentialFix` values should
+  guide code changes; strongly prefer those fixes over suppression.
 - Every rule accepts `enabled` (boolean) and `severity`
   (`error`, `warning`, `info`, or `hidden`).
 - Metric rules accept their documented `maximum` values.

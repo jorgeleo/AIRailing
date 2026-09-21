@@ -53,11 +53,14 @@ public sealed class HawthorneConfigurationLoaderTests
             new TestAdditionalText("/project/hawthorne.json", """
                 {
                   "_comment": "Explain the configuration to automated readers.",
+                  "_potentialFix": "Fix the code before suppressing a diagnostic.",
                   "version": 1,
                   "rules": {
                     "_comment": "Configure each diagnostic rule below.",
+                    "_potentialFix": "Fix the code described by the selected rule.",
                     "HAW105": {
                       "_comment": "Limit method size.",
+                      "_potentialFix": "Split the method into focused operations.",
                       "maximumExecutableStatements": 2,
                       "maximumPhysicalLines": 3
                     }
