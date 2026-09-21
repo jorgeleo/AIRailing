@@ -144,6 +144,12 @@ A complete example:
 See [`samples/Consumer/hawthorne.json`](samples/Consumer/hawthorne.json) for a
 complete annotated configuration containing every supported diagnostic.
 
+The NuGet package includes that annotated configuration as a content asset. On
+the first consumer build, it is copied beside the consuming `.csproj` as
+`hawthorne.json` and registered as an `AdditionalFiles` input when no file is
+already present. Set `HawthorneAutoCreateConfiguration` to `false` to opt out;
+an existing file is never overwritten.
+
 An invalid configuration file is reported as **HAW900** (a compiler error) and
 normal analysis is skipped for that compilation, so a bad configuration can
 never silently change what Hawthorne reports.

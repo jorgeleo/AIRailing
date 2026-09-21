@@ -4,7 +4,7 @@
     <AssemblyName>Hawthorne.Analyzers</AssemblyName>
     <RootNamespace>Hawthorne.Analyzers</RootNamespace>
     <PackageId>Hawthorne.Analyzers</PackageId>
-    <Version>0.1.4</Version>
+    <Version>0.1.5</Version>
     <Authors>Jorge Leo</Authors>
     <Description>Roslyn analyzers for unnecessary abstraction, indirection, hidden global state, and structural complexity in C# code.</Description>
     <PackageTags>roslyn;analyzer;csharp;code-quality;complexity;architecture</PackageTags>
@@ -26,6 +26,8 @@
     <PackageReference Include="System.Text.Json" Version="8.0.5" PrivateAssets="all" />
     <None Include="../../README.md" Pack="true" PackagePath="\" />
     <None Include="../../LICENSE" Pack="true" PackagePath="\" />
+    <None Include="../../samples/Consumer/hawthorne.json" Pack="true" PackagePath="contentFiles/any/any/hawthorne.json" />
+    <None Include="../../buildTransitive/Hawthorne.Analyzers.targets" Pack="true" PackagePath="buildTransitive/Hawthorne.Analyzers.targets" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -1,0 +1,20 @@
+<Project>
+  <PropertyGroup>
+    <HawthorneAutoCreateConfiguration Condition="'$(HawthorneAutoCreateConfiguration)' == ''">true</HawthorneAutoCreateConfiguration>
+    <HawthorneConfigurationPath Condition="'$(HawthorneConfigurationPath)' == ''">$(MSBuildProjectDirectory)\hawthorne.json</HawthorneConfigurationPath>
+    <HawthornePackagedConfigurationPath Condition="'$(HawthornePackagedConfigurationPath)' == ''">$(MSBuildThisFileDirectory)..\contentFiles\any\any\hawthorne.json</HawthornePackagedConfigurationPath>
+  </PropertyGroup>
+
+  <Target Name="HawthorneCreateDefaultConfiguration"
+          BeforeTargets="CoreCompile"
+          Condition="'$(HawthorneAutoCreateConfiguration)' == 'true' and !Exists('$(HawthorneConfigurationPath)')">
+    <Copy
+      SourceFiles="$(HawthornePackagedConfigurationPath)"
+      DestinationFiles="$(HawthorneConfigurationPath)"
+      SkipUnchangedFiles="true" />
+
+    <ItemGroup>
+      <AdditionalFiles Include="$(HawthorneConfigurationPath)" />
+    </ItemGroup>
+  </Target>
+</Project>

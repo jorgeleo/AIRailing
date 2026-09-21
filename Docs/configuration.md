@@ -11,6 +11,12 @@ ignores them. The root `_potentialFix` should strongly discourage
 `SuppressMessageAttribute`; it is a last resort only when no code fix is
 available, and it must always have a specific non-blank `Justification`.
 
+When installed from the NuGet package, Hawthorne automatically copies the
+annotated default `hawthorne.json` beside the consuming `.csproj` during the
+first build and registers it as an `AdditionalFiles` input. It never overwrites
+an existing file. Set `HawthorneAutoCreateConfiguration` to `false` to disable
+this behavior.
+
 HAW106 is opt-in. Set its `enabled` property to `true` to report missing CRLF
 after opening braces and semicolons. It only produces warnings/diagnostics; it
 does not modify source files automatically.
