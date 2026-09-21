@@ -39,22 +39,7 @@ public sealed class HawthorneAnalyzerBootstrap : DiagnosticAnalyzer
             HAW003PassThroughAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW104CouplingAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW001SingleImplementationAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
-            HAW901PragmaSuppressionAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
-            compilationStartContext.RegisterCompilationEndAction(compilationEndContext =>
-            {
-                foreach (var exception in hawthorneConfiguration.Exceptions)
-                {
-                    var isMatched = compilationEndContext.Compilation.SyntaxTrees.Any(syntaxTree =>
-                        PathNormalizer.GetProjectRelativePath(hawthorneConfiguration.ProjectDirectory!, syntaxTree.FilePath) == exception.File);
-                    if (!isMatched)
-                    {
-                        compilationEndContext.ReportDiagnostic(Diagnostic.Create(
-                        HawthorneDiagnosticDescriptors.HAW900,
-                        GetConfigurationLocation(configuration.Source),
-                        $"Exception path '{exception.File}' does not match a source file in this compilation."));
-                    }
-                }
-            });
+            HAW901SuppressionAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
         });
     }
 

@@ -1,5 +1,10 @@
 # Hawthorne Analyzer — Detailed Implementation Plan
 
+> Current v1 note: intentional diagnostic suppressions are source-level
+> `SuppressMessageAttribute` annotations with a non-blank `Justification`.
+> The former `hawthorne.json` file-exception design is superseded and is not
+> implemented.
+
 ## 1. Product Definition
 
 ### 1.1 Purpose
@@ -75,9 +80,10 @@ Example project configuration:
 </ItemGroup>
 ```
 
-### 2.4 Suppression is controlled centrally
+### 2.4 Suppression is explicit and justified
 
-Source-level suppression using pragmas must not be considered a valid Hawthorne exception mechanism.
+Source-level suppression using pragmas must not be considered a valid Hawthorne
+suppression mechanism.
 
 Examples such as:
 
@@ -87,40 +93,16 @@ Examples such as:
 
 must not be part of the supported Hawthorne workflow.
 
-Hawthorne exceptions must instead be explicitly documented in `hawthorne.json`.
+Intentional suppressions must use Roslyn's standard attribute with a non-blank
+justification:
 
-### 2.5 Exceptions are file-scoped
-
-Every exception must identify a specific source file.
-
-There must be no configuration mechanism that disables a rule globally through the exceptions system.
-
-Valid exception concept:
-
-```json
-{
-  "file": "Infrastructure/LegacyBridge.cs",
-  "rules": ["HAW003"],
-  "reason": "Compatibility adapter required by legacy integration."
-}
+```csharp
+[SuppressMessage("Hawthorne.Complexity", "HAW105",
+    Justification = "Generated boundary; hand-editing is not supported.")]
 ```
 
-Invalid exception concepts:
-
-```json
-{
-  "rules": ["HAW003"]
-}
-```
-
-```json
-{
-  "file": "*",
-  "rules": ["HAW003"]
-}
-```
-
-Exceptions should always contain a justification.
+`HAW901` reports Hawthorne suppressions with a blank justification and pragma
+suppression attempts.
 
 ---
 
@@ -199,19 +181,7 @@ Rules `HAW101` through `HAW105` target structural complexity.
       "maximumExecutableStatements": 30,
       "maximumPhysicalLines": 50
     }
-  },
-  "exceptions": [
-    {
-      "file": "Infrastructure/LegacyBridge.cs",
-      "rules": ["HAW003", "HAW104"],
-      "reason": "Legacy compatibility boundary required by external system."
-    },
-    {
-      "file": "Generated/ProtocolAdapter.cs",
-      "rules": ["HAW001"],
-      "reason": "Interface is required by protocol code generation contract."
-    }
-  ]
+  }
 }
 ```
 
@@ -225,17 +195,12 @@ Create strongly typed configuration classes:
 HawthorneConfiguration
     Version
     Rules
-    Exceptions
 
 HawthorneRuleConfiguration
     Enabled
     Severity
     Rule-specific properties
 
-HawthorneException
-    File
-    Rules
-    Reason
 ```
 
 Prefer dedicated strongly typed classes for rule-specific settings over an unstructured dictionary where practical.
@@ -267,11 +232,10 @@ Responsibilities:
 2. Read file contents.
 3. Deserialize JSON.
 4. Validate schema and configuration values.
-5. Normalize exception paths.
-6. Return immutable configuration objects.
-7. Fall back to built-in defaults when configuration is absent.
-8. Produce a configuration diagnostic when the file is malformed.
-9. When configuration is malformed, report `HAW900` as a compiler error and
+5. Return immutable configuration objects.
+6. Fall back to built-in defaults when configuration is absent.
+7. Produce a configuration diagnostic when the file is malformed.
+8. When configuration is malformed, report `HAW900` as a compiler error and
    perform no normal Hawthorne rule analysis for that compilation.
 
 Recommended diagnostic:
@@ -291,93 +255,7 @@ Do not silently ignore malformed configuration.
 
 ---
 
-## 4.4 File path normalization
-
-Exception handling must work reliably across Windows, macOS, and Linux.
-
-Normalize paths by:
-
-1. Converting `\\` to `/`.
-2. Removing leading `./`.
-3. Resolving paths relative to the project root when possible.
-4. Comparing with the appropriate platform-independent normalization strategy.
-5. Avoiding dependence on absolute machine-specific paths.
-
-The v1 path contract is:
-
-1. `hawthorne.json` must be beside the consuming `.csproj` file.
-2. An exception `file` value is a project-relative path written with `/`.
-3. Comparisons are ordinal and case-sensitive on every platform.
-4. Linked source files outside the project directory cannot use file exceptions
-   in v1.
-5. Supplying more than one `hawthorne.json` to a compilation is `HAW900`.
-6. An exception path that does not match a source file is `HAW900` so stale
-   exceptions remain visible.
-
-Preferred configuration format:
-
-```text
-relative/path/from/project/root.cs
-```
-
-Example:
-
-```text
-Services/Legacy/UserServiceAdapter.cs
-```
-
-Do not encourage absolute paths in configuration.
-
----
-
-# 5. Exception System
-
-## 5.1 Requirements
-
-Exceptions must:
-
-- Apply to exactly one source file path entry.
-- Identify one or more Hawthorne rule IDs.
-- Require a non-empty reason.
-- Be loaded only from `hawthorne.json`.
-- Be checked before reporting diagnostics.
-- Be visible and reviewable in source control.
-
-Exceptions must not:
-
-- Disable all rules globally.
-- Use wildcard-only file matches.
-- Depend on `#pragma warning disable`.
-- Depend on `[SuppressMessage]`.
-- Hide diagnostics without a recorded reason.
-
----
-
-## 5.2 Exception evaluator
-
-Create:
-
-```text
-Configuration/HawthorneExceptionEvaluator.cs
-```
-
-Primary API:
-
-```csharp
-bool IsExcepted(
-    string diagnosticId,
-    SyntaxTree syntaxTree);
-```
-
-or:
-
-```csharp
-bool IsExcepted(
-    string diagnosticId,
-    Location location);
-```
-
-The analyzer should perform this check immediately before reporting the diagnostic.
+## 4.4 Diagnostic reporting
 
 Common helper:
 
@@ -392,9 +270,9 @@ context.ReportHawthorneDiagnostic(
 This helper should:
 
 1. Check whether the rule is enabled.
-2. Check whether the target file is excepted.
-3. Resolve configured severity if supported internally.
-4. Report the diagnostic only when applicable.
+2. Resolve configured severity if supported internally.
+3. Report the diagnostic only when applicable. Roslyn applies valid
+   `SuppressMessageAttribute` suppressions after the analyzer reports.
 
 ---
 
@@ -439,7 +317,7 @@ Hawthorne/
 │   │   │   ├── HawthorneConfigurationDefaults.cs
 │   │   │   ├── HawthorneConfigurationLoader.cs
 │   │   │   ├── HawthorneConfigurationValidator.cs
-│   │   │   └── HawthorneExceptionEvaluator.cs
+│   │   │   └── HAW901SuppressionAnalyzer.cs
 │   │   │
 │   │   ├── Infrastructure/
 │   │   │   ├── DiagnosticReportingExtensions.cs
@@ -1188,7 +1066,7 @@ Because the product goal is build gating, a project can set a rule to `error` in
 
 # 19. Pragmas and Standard Roslyn Suppression
 
-Hawthorne should not advertise or depend on pragma-based exceptions.
+Hawthorne should not advertise or depend on pragma-based suppression.
 
 The intended governance model is:
 
@@ -1197,14 +1075,16 @@ Violation
    ↓
 Fix code
 OR
-Add documented file exception to hawthorne.json
+Add `SuppressMessageAttribute` with a non-blank `Justification`
 ```
 
 The analyzer cannot necessarily prevent the compiler infrastructure from honoring every built-in Roslyn suppression mechanism in all hosting environments. Therefore the implementation requirement is:
 
 - Hawthorne itself must never generate or recommend pragma suppression.
-- Hawthorne's own exception logic must ignore pragma state.
-- All officially supported exemptions must live in `hawthorne.json`.
+- Roslyn's standard suppression processing applies valid
+  `SuppressMessageAttribute` annotations.
+- Every Hawthorne `SuppressMessageAttribute` must include a non-blank
+  `Justification`.
 - CI guidance should treat source-level suppression of `HAW*` diagnostics as prohibited repository policy if the host compiler permits it.
 
 Create a companion rule that scans source text for:
@@ -1218,12 +1098,13 @@ and reports it as a separate violation.
 Potential diagnostic:
 
 ```text
-HAW901 — Hawthorne pragma suppression is not permitted
+HAW901 — Hawthorne suppression must be justified
 ```
 
 `HAW901` is a warning. It reports whenever a pragma attempts to suppress one or
-more `HAW*` diagnostics. Pragmas for unrelated compiler or analyzer diagnostics
-are ignored.
+more `HAW*` diagnostics, or a `SuppressMessageAttribute` for a Hawthorne rule
+has a blank justification. Pragmas for unrelated compiler or analyzer
+diagnostics are ignored.
 
 ---
 
@@ -1240,8 +1121,8 @@ Positive tests
 Negative tests
 Boundary tests
 Configuration tests
-Exception tests
-Cross-platform path tests
+Suppression tests
+Attribute-target tests
 Malformed configuration tests
 ```
 
@@ -1253,7 +1134,7 @@ Test:
 
 - One interface / one implementation / no polymorphism -> violation.
 - One interface / two implementations -> no violation.
-- One interface / one implementation but configured file exception -> no violation.
+- One interface / one implementation with a justified `SuppressMessageAttribute` -> no violation.
 - Public or external-boundary interfaces with one in-compilation implementation -> violation.
 - Matching and non-matching interface/class naming.
 - Generic interfaces.
@@ -1270,7 +1151,7 @@ Test:
 - Factory with switch selecting types -> no violation.
 - Factory with meaningful initialization -> no violation.
 - Factory with trivial constructor forwarding -> violation.
-- Factory exception by file -> no violation.
+- Factory suppression with a justified `SuppressMessageAttribute` -> no violation.
 
 ---
 
@@ -1387,9 +1268,9 @@ Each page should contain:
 2. Why it exists.
 3. Violation example.
 4. Preferred alternative.
-5. Legitimate exceptions.
+5. Legitimate suppressions.
 6. Configuration keys.
-7. File-scoped exception example.
+7. `SuppressMessageAttribute` example with a non-blank justification.
 
 Documentation should be written for both humans and coding agents: direct, deterministic, and example-heavy.
 
@@ -1436,34 +1317,32 @@ Acceptance criteria:
 
 ---
 
-## Phase 3 — File-scoped exception engine
+## Phase 3 — Suppression governance
 
 Deliverables:
 
-- Path normalization.
-- Exception lookup table.
-- Required `reason` validation.
+- `SuppressMessageAttribute` validation.
+- Required non-blank `Justification` validation.
 - Shared diagnostic reporting helper.
 
 Acceptance criteria:
 
-- Exception suppresses only specified rules in specified file.
-- Same diagnostic in another file is still reported.
-- Empty reason is rejected.
-- Wildcard global exception is rejected.
-- Windows and Unix path separators produce equivalent matching.
+- A justified `SuppressMessageAttribute` suppresses the targeted diagnostic.
+- The same diagnostic without an attribute is still reported.
+- Empty or missing `Justification` produces `HAW901`.
+- Pragmas for Hawthorne diagnostics produce `HAW901`.
 
 ---
 
 ## Phase 4 — HAW105 Method Length
 
-Implement first because it is simple and validates the full reporting/configuration/exception pipeline.
+Implement first because it is simple and validates the full reporting and configuration pipeline.
 
 Acceptance criteria:
 
 - Executable statement threshold works.
 - Physical line threshold works.
-- File exception works.
+- Justified `SuppressMessageAttribute` suppression works.
 - Rule enable/disable works.
 
 ---
@@ -1620,7 +1499,7 @@ Diagnostic:
 
 ```text
 Hawthorne diagnostics may not be suppressed with pragmas.
-Add a documented file-scoped exception to hawthorne.json instead.
+Use `SuppressMessageAttribute` with a non-blank `Justification` instead.
 ```
 
 Acceptance criteria:
@@ -1762,15 +1641,15 @@ Hawthorne v1 is complete when:
 - All nine primary rules are implemented.
 - `hawthorne.json` controls thresholds and rule enablement.
 - Configuration parsing is validated and tested.
-- File-specific exceptions work.
-- Every exception requires a reason.
-- No supported global exception mechanism exists.
-- Hawthorne pragma suppression is reported by HAW901.
+- Justified `SuppressMessageAttribute` suppressions work.
+- Every Hawthorne suppression requires a non-blank `Justification`.
+- No supported JSON exception mechanism exists.
+- Hawthorne pragma suppression and unjustified attributes are reported by HAW901.
 - Generated code is ignored by default.
 - Rules operate correctly in Visual Studio, Visual Studio Code, and `dotnet build`.
 - Every rule has positive and negative tests.
 - Metric calculators have exact-value unit tests.
-- Cross-platform exception paths are tested.
+- Attribute-target suppression behavior is tested.
 - Analyzer execution is concurrency-safe.
 - Architecture rules have been calibrated against real repositories.
 - Documentation exists for every rule.
@@ -1788,7 +1667,7 @@ Execute implementation in this exact order:
 3. Diagnostic descriptor infrastructure
 4. hawthorne.json parser
 5. Configuration validation / HAW900
-6. File exception subsystem
+6. Suppression governance
 7. Shared diagnostic-reporting infrastructure
 8. HAW105 method length
 9. HAW103 nesting
@@ -1845,7 +1724,7 @@ Introduce abstractions when they solve a demonstrated problem.
 Keep methods understandable.
 Keep dependency surfaces small.
 Avoid layers that only relay calls.
-Make exceptions explicit, local, and documented.
+Make suppressions explicit, local, and justified.
 ```
 
 That philosophy should guide future Hawthorne rules as the analyzer expands.

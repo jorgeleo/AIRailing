@@ -24,7 +24,7 @@ the status section before stopping work.
 - [x] Define immutable configuration models and warning defaults.
 - [x] Load exactly one `hawthorne.json` from `AdditionalFiles`.
 - [x] Validate configuration and report compiler-error `HAW900` without normal analysis.
-- [x] Implement the project-relative file-exception contract.
+- [x] Use source-level `SuppressMessageAttribute` suppressions with required justifications.
 - [x] Implement dynamic effective diagnostic severity.
 
 ## Rules, in implementation order

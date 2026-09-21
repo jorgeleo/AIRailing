@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using Hawthorne.Analyzers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -69,29 +70,6 @@ public sealed class HawthorneAnalyzerBootstrapTests
     }
 
     [Fact]
-    public async Task Analyze_WhenExceptionPathDoesNotMatchSource_ReportsCompilerErrorHAW900()
-    {
-        var compilation = CSharpCompilation.Create(
-            assemblyName: "TestAssembly",
-            syntaxTrees: new[] { CSharpSyntaxTree.ParseText("public sealed class Example { }", path: "/project/Present.cs") },
-            references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
-        var additionalFiles = ImmutableArray.Create<AdditionalText>(
-            new TestAdditionalText("/project/hawthorne.json", """
-                { "version": 1, "exceptions": [{ "file": "Missing.cs", "rules": ["HAW105"], "reason": "Required." }] }
-                """));
-        var options = new CompilationWithAnalyzersOptions(new AnalyzerOptions(additionalFiles), null, true, false, false);
-
-        var diagnostics = await compilation
-            .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), options)
-            .GetAnalyzerDiagnosticsAsync();
-
-        var diagnostic = Assert.Single(diagnostics);
-        Assert.Equal("HAW900", diagnostic.Id);
-        Assert.Equal(DiagnosticSeverity.Error, diagnostic.Severity);
-        Assert.Contains("does not match a source file", diagnostic.GetMessage());
-    }
-
-    [Fact]
     public async Task Analyze_WhenMethodExceedsExecutableStatementLimit_ReportsHAW105()
     {
         var statements = string.Concat(Enumerable.Repeat("int value = 0;", 31));
@@ -145,24 +123,78 @@ public sealed class HawthorneAnalyzerBootstrapTests
     }
 
     [Fact]
-    public async Task Analyze_WhenMethodLengthIsExceptedForItsFile_DoesNotReportHAW105()
+    public async Task Analyze_WhenMethodLengthHasAJustifiedSuppressMessage_DoesNotReportHAW105()
     {
         var statements = string.Concat(Enumerable.Repeat("int value = 0;", 31));
         var compilation = CSharpCompilation.Create(
             assemblyName: "TestAssembly",
-            syntaxTrees: new[] { CSharpSyntaxTree.ParseText($"class Example {{ void TooLong() {{ {statements} }} }}", path: "/project/Legacy.cs") },
-            references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
-        var additionalFiles = ImmutableArray.Create<AdditionalText>(
-            new TestAdditionalText("/project/hawthorne.json", """
-                { "version": 1, "exceptions": [{ "file": "Legacy.cs", "rules": ["HAW105"], "reason": "Legacy boundary." }] }
-                """));
-        var options = new CompilationWithAnalyzersOptions(new AnalyzerOptions(additionalFiles), null, true, false, false);
+            syntaxTrees: new[] { CSharpSyntaxTree.ParseText($"using System.Diagnostics.CodeAnalysis; [SuppressMessage(\"Hawthorne.Complexity\", \"HAW105\", Justification = \"Legacy boundary.\")] class Example {{ void TooLong() {{ {statements} }} }}", path: "/project/Legacy.cs") },
+            references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location), MetadataReference.CreateFromFile(typeof(SuppressMessageAttribute).Assembly.Location) });
 
         var diagnostics = await compilation
-            .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), options)
+            .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()))
             .GetAnalyzerDiagnosticsAsync();
 
         Assert.Empty(diagnostics);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    public async Task Analyze_WhenHawthorneSuppressMessageHasBlankJustification_ReportsHAW901(string justification)
+    {
+        var statements = string.Concat(Enumerable.Repeat("int value = 0;", 31));
+        var source = $"using System.Diagnostics.CodeAnalysis; class Example {{ [SuppressMessage(\"Hawthorne.Complexity\", \"HAW105\", Justification = \"{justification}\")] void TooLong() {{ {statements} }} }}";
+        var compilation = CSharpCompilation.Create(
+            "TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText(source, path: "/project/Legacy.cs") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location), MetadataReference.CreateFromFile(typeof(SuppressMessageAttribute).Assembly.Location) });
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("HAW901", diagnostic.Id);
+        Assert.Contains("HAW105", diagnostic.GetMessage());
+    }
+
+    [Fact]
+    public async Task Analyze_WhenHawthorneSuppressMessageOmitsJustification_ReportsHAW901()
+    {
+        var statements = string.Concat(Enumerable.Repeat("int value = 0;", 31));
+        var source = $"using System.Diagnostics.CodeAnalysis; [SuppressMessage(\"Hawthorne.Complexity\", \"HAW105\")] class Example {{ void TooLong() {{ {statements} }} }}";
+        var compilation = CSharpCompilation.Create(
+            "TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText(source, path: "/project/Legacy.cs") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location), MetadataReference.CreateFromFile(typeof(SuppressMessageAttribute).Assembly.Location) });
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("HAW901", diagnostic.Id);
+    }
+
+    [Fact]
+    public async Task Analyze_WhenLegacyJsonExceptionIsPresent_ReportsConfigurationError()
+    {
+        var statements = string.Concat(Enumerable.Repeat("int value = 0;", 31));
+        var compilation = CSharpCompilation.Create(
+            "TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText($"class Example {{ void TooLong() {{ {statements} }} }}", path: "/project/Legacy.cs") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var options = new CompilationWithAnalyzersOptions(
+            new AnalyzerOptions(ImmutableArray.Create<AdditionalText>(new TestAdditionalText(
+                "/project/hawthorne.json",
+                "{ \"version\": 1, \"exceptions\": [{ \"file\": \"Legacy.cs\", \"rules\": [\"HAW105\"], \"reason\": \"Legacy boundary.\" }] }"))),
+            null,
+            true,
+            false,
+            false);
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), options).GetAnalyzerDiagnosticsAsync();
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("HAW900", diagnostic.Id);
+        Assert.Contains("SuppressMessageAttribute", diagnostic.GetMessage());
     }
 
     [Fact]

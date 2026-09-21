@@ -6,15 +6,15 @@ Hawthorne is a Roslyn analyzer NuGet package (Hawthorne.Analyzers, v0.1.3, netst
 
 - 11 rules: HAW001–004 (architecture), HAW101–105 (complexity), HAW900 (invalid config → compile error), HAW901  
   (pragma suppression → warning)
-- Governance model: one hawthorne.json per project (versioned, strict validation), per-rule  
-  enable/severity/thresholds, file-scoped exceptions requiring exact paths + reasons; pragmas are the forbidden  
-  suppression path
+- Governance model: one hawthorne.json per project (versioned, strict validation), per-rule
+  enable/severity/thresholds, and source-level `SuppressMessageAttribute` suppressions
+  requiring non-blank justifications; pragmas are the forbidden suppression path
 - Layout: src/Hawthorne.Analyzers (13 files, ~700 lines), src/Hawthorne.Analyzers.Tests (45 tests), samples/Consumer,  
   Docs/ (1,851-line implementation plan, per-rule docs), GitHub Packages publish workflow
 - State: builds clean, all tests pass; working tree has an uncommitted 0.1.2→0.1.3 bump
 
-What's genuinely good (don't touch): the config loader is tight (wildcard rejection, one-file rule, exception-path  
- verification, compile-error on bad config); HAW003 is well-designed (excludes overrides/interface impls,  
+What's genuinely good (don't touch): the config loader is tight (one-file rule and
+ compile-error on bad config); HAW003 is well-designed (excludes overrides/interface impls,
  argument-identity by name, await-aware, type-level ratio); I verified symbol-action rules don't pollute  
  referenced-assembly builds; docs match behavior. This is a coherent, appropriately-scoped package — ironically not  
  over-engineered at all.

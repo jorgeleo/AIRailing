@@ -12,4 +12,4 @@ HAW103 | Hawthorne.Complexity | Warning | Maximum nesting depth
 HAW104 | Hawthorne.Complexity | Warning | Class coupling
 HAW105 | Hawthorne.Complexity | Warning | Method length
 HAW900 | Hawthorne.Configuration | Error | Invalid Hawthorne configuration
-HAW901 | Hawthorne.Configuration | Warning | Hawthorne pragma suppression
+HAW901 | Hawthorne.Configuration | Warning | Hawthorne suppression must have a non-empty justification

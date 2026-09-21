@@ -66,12 +66,12 @@ internal static class HawthorneDiagnosticDescriptors
 
     internal static readonly DiagnosticDescriptor HAW901 = new(
         "HAW901",
-        "Hawthorne pragma suppression is not permitted",
-        "Pragma suppresses Hawthorne diagnostic(s): {0}. Use a documented file exception in hawthorne.json instead.",
+        "Hawthorne suppression must be justified",
+        "Hawthorne suppression '{0}' must include a non-empty Justification",
         ConfigurationCategory,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: "Hawthorne diagnostics must be governed by hawthorne.json rather than source pragmas.");
+        description: "Hawthorne diagnostics may be suppressed only with a non-empty justification.");
 
     internal static ImmutableArray<DiagnosticDescriptor> All { get; } = ImmutableArray.Create(
         HAW001, HAW002, HAW003, HAW004, HAW101, HAW102, HAW103, HAW104, HAW105, HAW900, HAW901);

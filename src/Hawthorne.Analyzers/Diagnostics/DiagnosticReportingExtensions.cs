@@ -27,8 +27,7 @@ internal static class DiagnosticReportingExtensions
         params object[] messageArguments)
     {
         var rule = configuration.GetRule(descriptor.Id);
-        if (!rule.IsEnabled ||
-            (location.SourceTree is not null && new HawthorneExceptionEvaluator(configuration).IsExcepted(descriptor.Id, location.SourceTree)))
+        if (!rule.IsEnabled)
         {
             return null;
         }

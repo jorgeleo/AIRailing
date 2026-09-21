@@ -76,37 +76,15 @@ public sealed class HawthorneConfigurationLoaderTests
     }
 
     [Fact]
-    public void IsExcepted_WhenSourceMatchesConfiguredProjectRelativePath_ReturnsTrueAcrossWindowsStylePaths()
-    {
-        var result = HawthorneConfigurationLoader.Load(ImmutableArray.Create<AdditionalText>(
-            new TestAdditionalText("C:\\project\\hawthorne.json", """
-                {
-                  "version": 1,
-                  "exceptions": [
-                    { "file": "Infrastructure/LegacyBridge.cs", "rules": ["HAW105"], "reason": "Required boundary." }
-                  ]
-                }
-                """)));
-
-        var syntaxTree = CSharpSyntaxTree.ParseText("class LegacyBridge { }", path: "C:\\project\\Infrastructure\\LegacyBridge.cs");
-
-        Assert.True(result.IsValid);
-        var configuration = Assert.IsType<HawthorneConfiguration>(result.Configuration);
-        var evaluator = new HawthorneExceptionEvaluator(configuration);
-        Assert.True(evaluator.IsExcepted("HAW105", syntaxTree));
-        Assert.False(evaluator.IsExcepted("HAW104", syntaxTree));
-    }
-
-    [Fact]
-    public void Load_WhenExceptionPathUsesWildcard_ReturnsAnError()
+    public void Load_WhenLegacyExceptionsPropertyIsPresent_ReturnsMigrationError()
     {
         var result = HawthorneConfigurationLoader.Load(ImmutableArray.Create<AdditionalText>(
             new TestAdditionalText("/project/hawthorne.json", """
-                { "version": 1, "exceptions": [{ "file": "*.cs", "rules": ["HAW105"], "reason": "Not allowed." }] }
+                { "version": 1, "exceptions": [{ "file": "Example.cs", "rules": ["HAW105"], "reason": "Legacy." }] }
                 """)));
 
         Assert.False(result.IsValid);
-        Assert.Equal("Each exception file must be a non-wildcard project-relative path.", result.ErrorMessage);
+        Assert.Contains("SuppressMessageAttribute", result.ErrorMessage);
     }
 
     [Fact]
@@ -126,24 +104,6 @@ public sealed class HawthorneConfigurationLoaderTests
 
         Assert.NotNull(diagnostic);
         Assert.Equal(DiagnosticSeverity.Error, diagnostic.Severity);
-    }
-
-    [Fact]
-    public void CreateHawthorneDiagnostic_WhenRuleIsExcepted_ReturnsNull()
-    {
-        var result = HawthorneConfigurationLoader.Load(ImmutableArray.Create<AdditionalText>(
-            new TestAdditionalText("/project/hawthorne.json", """
-                { "version": 1, "exceptions": [{ "file": "Example.cs", "rules": ["HAW105"], "reason": "Required." }] }
-                """)));
-        var tree = CSharpSyntaxTree.ParseText("class Example { }", path: "/project/Example.cs");
-
-        var diagnostic = DiagnosticReportingExtensions.CreateHawthorneDiagnostic(
-            HawthorneDiagnosticDescriptors.HAW105,
-            tree.GetRoot().GetLocation(),
-            Assert.IsType<HawthorneConfiguration>(result.Configuration),
-            "detail");
-
-        Assert.Null(diagnostic);
     }
 
     private sealed class TestAdditionalText(string path, string text) : AdditionalText

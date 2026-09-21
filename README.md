@@ -8,7 +8,7 @@ interface, factory, or wrapper without a real boundary behind it.
 
 Every rule is a **warning by default**, and the package works with zero
 configuration. Add a `hawthorne.json` file to a project to tune thresholds,
-disable rules, or document file-scoped exceptions.
+disable rules, or tune severity.
 
 ## Installation
 
@@ -48,7 +48,7 @@ The .NET SDK resolves GitHub Packages with your `GITHUB_TOKEN` automatically.
 | HAW104 | Class coupling (distinct referenced types) | 12 |
 | HAW105 | Method length | 30 statements / 50 lines |
 | HAW900 | Invalid `hawthorne.json` | compile error |
-| HAW901 | `#pragma warning disable` governing Hawthorne rules | — |
+| HAW901 | Unjustified Hawthorne suppression or `#pragma warning disable` | — |
 
 Each rule has a dedicated page in [Docs/rules/](Docs/rules/) with what it
 reports, what it deliberately ignores, and its configuration knobs.
@@ -85,14 +85,7 @@ A complete example:
     "HAW103": { "maximum": 3 },
     "HAW104": { "maximum": 16 },
     "HAW105": { "maximumExecutableStatements": 40, "maximumPhysicalLines": 80 }
-  },
-  "exceptions": [
-    {
-      "file": "/src/Legacy/GeneratedController.cs",
-      "rules": ["HAW003", "HAW105"],
-      "reason": "Generated controller; hand-editing is not supported."
-    }
-  ]
+  }
 }
 ```
 
@@ -100,25 +93,34 @@ A complete example:
 - Every rule accepts `enabled` (boolean) and `severity`
   (`error`, `warning`, `info`, or `hidden`).
 - Metric rules accept their documented `maximum` values.
-- Each `exceptions` entry requires an exact project-relative path (wildcards
-  are rejected), the rule IDs it covers, and a non-empty `reason`.
 
 An invalid configuration file is reported as **HAW900** (a compiler error) and
 normal analysis is skipped for that compilation, so a bad configuration can
-never silently change what Hawthorne reports. An exception path that matches
-no source file in the compilation is also reported as HAW900.
+never silently change what Hawthorne reports.
 
 ## Suppression
 
-Prefer file-scoped exceptions in `hawthorne.json` over `#pragma warning
-disable`:
+Use `SuppressMessageAttribute` for an intentional, source-scoped suppression.
+The `Justification` must be non-empty:
+
+```csharp
+using System.Diagnostics.CodeAnalysis;
+
+[SuppressMessage(
+    "Hawthorne.Complexity",
+    "HAW105",
+    Justification = "Generated controller; hand-editing is not supported.")]
+void GeneratedControllerMethod() { /* ... */ }
+```
 
 - A pragma that names any Hawthorne rule ID is reported as **HAW901**.
 - A codeless `#pragma warning disable` suppresses every warning, all of
   Hawthorne's rules included, so it is reported as well.
+- A Hawthorne `SuppressMessageAttribute` without a non-blank `Justification`
+  is reported as **HAW901**.
 
-Keeping suppression decisions in configuration makes them reviewable in one
-place instead of scattered through source files.
+Keeping the justification next to the suppressed code makes the decision
+reviewable at the point where it applies.
 
 ## Trying it out
 
