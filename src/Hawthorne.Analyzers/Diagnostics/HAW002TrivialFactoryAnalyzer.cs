@@ -17,7 +17,7 @@ internal static class HAW002TrivialFactoryAnalyzer
         foreach (var method in factory.Members.OfType<MethodDeclarationSyntax>())
         {
             var creation = GetSingleCreation(method);
-            if (creation is null || creation.Initializer is not null) continue;
+            if (creation is null) continue;
             var type = context.SemanticModel.GetTypeInfo(creation).Type;
             if (type is null) continue;
             context.ReportHawthorneDiagnostic(HawthorneDiagnosticDescriptors.HAW002, method.Identifier.GetLocation(), configuration,
@@ -25,7 +25,11 @@ internal static class HAW002TrivialFactoryAnalyzer
         }
     }
 
-    private static ObjectCreationExpressionSyntax? GetSingleCreation(MethodDeclarationSyntax method) =>
-        method.ExpressionBody?.Expression as ObjectCreationExpressionSyntax ??
-        (method.Body?.Statements.Count == 1 && method.Body.Statements[0] is ReturnStatementSyntax { Expression: ObjectCreationExpressionSyntax creation } ? creation : null);
+    private static ExpressionSyntax? GetSingleCreation(MethodDeclarationSyntax method)
+    {
+        var expression = method.ExpressionBody?.Expression ??
+            (method.Body?.Statements.Count == 1 && method.Body.Statements[0] is ReturnStatementSyntax returned ? returned.Expression : null);
+        // BaseObjectCreationExpressionSyntax covers both `new T()` and target-typed `new()` (ImplicitObjectCreationExpressionSyntax in Roslyn 4.14+).
+        return expression is BaseObjectCreationExpressionSyntax { Initializer: null } ? expression : null;
+    }
 }

@@ -9,7 +9,7 @@ internal static class CognitiveComplexityCalculator
     internal static int Calculate(MethodDeclarationSyntax method)
     {
         var visitor = new Visitor();
-        visitor.Visit(method.Body);
+        visitor.Visit(method.Body ?? (SyntaxNode?)method.ExpressionBody);
         return visitor.Score;
     }
 

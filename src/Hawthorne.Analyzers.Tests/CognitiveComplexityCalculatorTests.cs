@@ -15,4 +15,13 @@ public sealed class CognitiveComplexityCalculatorTests
 
         Assert.Equal(6, CognitiveComplexityCalculator.Calculate(method));
     }
+
+    [Fact]
+    public void Calculate_WhenMethodIsExpressionBodied_ScoresNestedConditionals()
+    {
+        var method = CSharpSyntaxTree.ParseText("class C { int M(int a, int b) => a > 1 ? (b > 2 ? (a + b > 3 ? 1 : 2) : 3) : 4; }")
+            .GetRoot().DescendantNodes().OfType<MethodDeclarationSyntax>().Single();
+
+        Assert.Equal(6, CognitiveComplexityCalculator.Calculate(method));
+    }
 }

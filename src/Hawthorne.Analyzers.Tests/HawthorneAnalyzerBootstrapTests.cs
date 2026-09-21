@@ -110,6 +110,25 @@ public sealed class HawthorneAnalyzerBootstrapTests
     }
 
     [Fact]
+    public async Task Analyze_WhenMethodExceedsExecutableStatementLimit_ReportsTheSplitInstructionOnce()
+    {
+        var statements = string.Concat(Enumerable.Repeat("int value = 0;", 31));
+        var compilation = CSharpCompilation.Create(
+            assemblyName: "TestAssembly",
+            syntaxTrees: new[] { CSharpSyntaxTree.ParseText($"class Example {{ void TooLong() {{ {statements} }} }}") },
+            references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+
+        var diagnostics = await compilation
+            .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()))
+            .GetAnalyzerDiagnosticsAsync();
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal(
+            "Method length exceeds the configured limit: Method 'TooLong' contains 31 executable statements; maximum allowed is 30. Split the method into focused operations.",
+            diagnostic.GetMessage());
+    }
+
+    [Fact]
     public async Task Analyze_WhenMethodExceedsPhysicalLineLimit_ReportsHAW105()
     {
         var blankLines = string.Concat(Enumerable.Repeat("\n", 50));
@@ -175,6 +194,37 @@ public sealed class HawthorneAnalyzerBootstrapTests
     }
 
     [Fact]
+    public async Task Analyze_WhenExpressionBodiedMethodExceedsCognitiveMaximum_ReportsHAW102()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText("class Example { int Pick(int a, int b) => a > 1 ? (b > 2 ? (a + b > 3 ? 1 : 2) : 3) : 4; }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var options = new CompilationWithAnalyzersOptions(new AnalyzerOptions(ImmutableArray.Create<AdditionalText>(
+            new TestAdditionalText("/project/hawthorne.json", "{ \"version\": 1, \"rules\": { \"HAW102\": { \"maximum\": 2 } } }"))), null, true, false, false);
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), options).GetAnalyzerDiagnosticsAsync();
+
+        Assert.Equal("HAW102", Assert.Single(diagnostics).Id);
+    }
+
+    [Fact]
+    public async Task Analyze_WhenExpressionBodiedMethodContainsNestedLambdaControlFlow_ReportsHAW103()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText("""
+                using System.Collections.Generic;
+                class Example { void Run(List<int> values) => values.ForEach(value => { if (value > 0) { if (value > 1) { } } }); }
+                """) },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var options = new CompilationWithAnalyzersOptions(new AnalyzerOptions(ImmutableArray.Create<AdditionalText>(
+            new TestAdditionalText("/project/hawthorne.json", "{ \"version\": 1, \"rules\": { \"HAW103\": { \"maximum\": 1 } } }"))), null, true, false, false);
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), options).GetAnalyzerDiagnosticsAsync();
+
+        Assert.Equal("HAW103", Assert.Single(diagnostics).Id);
+    }
+
+    [Fact]
     public async Task Analyze_WhenStaticSelfInstanceHasMutableState_ReportsHAW004()
     {
         var compilation = CSharpCompilation.Create("TestAssembly",
@@ -235,6 +285,19 @@ public sealed class HawthorneAnalyzerBootstrapTests
         var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
 
         Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Analyze_WhenFactoryUsesTargetTypedNew_ReportsHAW002()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText("class Item { } class ItemFactory { Item Create() => new(); }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("HAW002", diagnostic.Id);
     }
 
     [Fact]
@@ -486,7 +549,29 @@ public sealed class HawthorneAnalyzerBootstrapTests
         var compilation = CSharpCompilation.Create("TestAssembly", new[] { CSharpSyntaxTree.ParseText("#pragma warning disable HAW003\nclass Example { }") },
             new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
         var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
-        Assert.Equal("HAW901", Assert.Single(diagnostics).Id);
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("HAW901", diagnostic.Id);
+        Assert.Contains("HAW003", diagnostic.GetMessage());
+    }
+
+    [Fact]
+    public async Task Analyze_WhenBarePragmaDisablesAllWarnings_ReportsHAW901ForAllDiagnostics()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly", new[] { CSharpSyntaxTree.ParseText("#pragma warning disable\nclass Example { }\n#pragma warning restore") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("HAW901", diagnostic.Id);
+        Assert.Contains("all diagnostics", diagnostic.GetMessage());
+    }
+
+    [Fact]
+    public async Task Analyze_WhenPragmaDisablesOnlyForeignCodes_DoesNotReportHAW901()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly", new[] { CSharpSyntaxTree.ParseText("#pragma warning disable 0219\nclass Example { }\n#pragma warning restore") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+        Assert.Empty(diagnostics);
     }
 
     private sealed class TestAdditionalText(string path, string text) : AdditionalText

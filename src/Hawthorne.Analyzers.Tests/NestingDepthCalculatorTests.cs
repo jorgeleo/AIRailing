@@ -16,4 +16,14 @@ public sealed class NestingDepthCalculatorTests
 
         Assert.Equal(3, NestingDepthCalculator.Calculate(method));
     }
+
+    [Fact]
+    public void Calculate_WhenMethodIsExpressionBodied_CountsNestedLambdaControlFlow()
+    {
+        var method = CSharpSyntaxTree.ParseText("""
+            using System.Collections.Generic;
+            class C { void M(List<int> values) => values.ForEach(value => { if (value > 0) { if (value > 1) { } } }); }
+            """).GetRoot().DescendantNodes().OfType<MethodDeclarationSyntax>().Single();
+        Assert.Equal(2, NestingDepthCalculator.Calculate(method));
+    }
 }
