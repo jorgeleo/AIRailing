@@ -47,6 +47,30 @@ public sealed class HawthorneConfigurationLoaderTests
     }
 
     [Fact]
+    public void Load_WhenCommentMetadataIsPresent_IgnoresItAtEveryConfigurationLevel()
+    {
+        var result = HawthorneConfigurationLoader.Load(ImmutableArray.Create<AdditionalText>(
+            new TestAdditionalText("/project/hawthorne.json", """
+                {
+                  "_comment": "Explain the configuration to automated readers.",
+                  "version": 1,
+                  "rules": {
+                    "_comment": "Configure each diagnostic rule below.",
+                    "HAW105": {
+                      "_comment": "Limit method size.",
+                      "maximumExecutableStatements": 2,
+                      "maximumPhysicalLines": 3
+                    }
+                  }
+                }
+                """)));
+
+        var configuration = Assert.IsType<HawthorneConfiguration>(result.Configuration);
+        Assert.Equal(2, configuration.MethodLength.MaximumExecutableStatements);
+        Assert.Equal(3, configuration.MethodLength.MaximumPhysicalLines);
+    }
+
+    [Fact]
     public void Load_WhenCyclomaticThresholdIsConfigured_UsesConfiguredValue()
     {
         var result = HawthorneConfigurationLoader.Load(ImmutableArray.Create<AdditionalText>(

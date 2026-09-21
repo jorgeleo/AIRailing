@@ -90,9 +90,14 @@ A complete example:
 ```
 
 - `version` must be `1`.
+- `_comment` properties are optional metadata for human and AI readers and are
+  ignored by the analyzer.
 - Every rule accepts `enabled` (boolean) and `severity`
   (`error`, `warning`, `info`, or `hidden`).
 - Metric rules accept their documented `maximum` values.
+
+See [`samples/Consumer/hawthorne.json`](samples/Consumer/hawthorne.json) for a
+complete annotated configuration containing every supported diagnostic.
 
 An invalid configuration file is reported as **HAW900** (a compiler error) and
 normal analysis is skipped for that compilation, so a bad configuration can

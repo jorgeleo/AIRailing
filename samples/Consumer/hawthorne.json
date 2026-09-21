@@ -1,1 +1,70 @@
-{ "version": 1, "rules": { "HAW001": { "enabled": false } } }
+{
+  "_comment": "Hawthorne analyzer configuration. Rules are warnings by default. Use SuppressMessageAttribute with a non-blank Justification for intentional source-level suppressions.",
+  "version": 1,
+  "rules": {
+    "_comment": "Each rule can set enabled and severity. Metric rules also define their maximum thresholds.",
+
+    "HAW001": {
+      "_comment": "Reports interfaces with exactly one concrete implementation in this compilation. Disabled here for this sample.",
+      "enabled": false,
+      "severity": "warning"
+    },
+    "HAW002": {
+      "_comment": "Reports factories that always construct one fixed type without meaningful selection, configuration, or lifecycle behavior.",
+      "enabled": true,
+      "severity": "warning"
+    },
+    "HAW003": {
+      "_comment": "Reports pass-through methods and types whose members mostly forward calls without adding behavior.",
+      "enabled": true,
+      "severity": "warning"
+    },
+    "HAW004": {
+      "_comment": "Reports static shared instances that expose mutable state. requireMutableState controls whether mutable state is required.",
+      "enabled": true,
+      "severity": "warning",
+      "requireMutableState": true
+    },
+    "HAW101": {
+      "_comment": "Reports methods whose cyclomatic complexity exceeds maximum.",
+      "enabled": true,
+      "severity": "warning",
+      "maximum": 10
+    },
+    "HAW102": {
+      "_comment": "Reports methods whose cognitive complexity exceeds maximum.",
+      "enabled": true,
+      "severity": "warning",
+      "maximum": 15
+    },
+    "HAW103": {
+      "_comment": "Reports methods whose control-flow nesting depth exceeds maximum.",
+      "enabled": true,
+      "severity": "warning",
+      "maximum": 4
+    },
+    "HAW104": {
+      "_comment": "Reports types that depend on more distinct external types than maximum.",
+      "enabled": true,
+      "severity": "warning",
+      "maximum": 12
+    },
+    "HAW105": {
+      "_comment": "Reports methods longer than either configured executable-statement or physical-line limit.",
+      "enabled": true,
+      "severity": "warning",
+      "maximumExecutableStatements": 30,
+      "maximumPhysicalLines": 50
+    },
+    "HAW900": {
+      "_comment": "Reports invalid hawthorne.json content as a compiler error. This diagnostic is always an error when configuration is invalid.",
+      "enabled": true,
+      "severity": "error"
+    },
+    "HAW901": {
+      "_comment": "Reports Hawthorne pragma suppression and SuppressMessageAttribute entries whose Justification is missing or blank.",
+      "enabled": true,
+      "severity": "warning"
+    }
+  }
+}

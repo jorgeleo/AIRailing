@@ -63,6 +63,11 @@ internal static class HawthorneConfigurationLoader
 
             foreach (var rule in rules.EnumerateObject())
             {
+                if (rule.Name == "_comment")
+                {
+                    continue;
+                }
+
                 if (!configuration.Rules.ContainsKey(rule.Name))
                 {
                     return HawthorneConfigurationLoadResult.Invalid($"hawthorne.json.rules contains unknown rule '{rule.Name}'.", configurationFiles[0]);
