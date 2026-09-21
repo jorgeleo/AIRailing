@@ -1,13 +1,17 @@
 # Hawthorne configuration
 
 Add `hawthorne.json` beside the consuming project file and include it as an
-`AdditionalFiles` item. Rules default to warnings. Each rule accepts `enabled`
-and `severity` (`error`, `warning`, `info`, or `hidden`); metric rules also
-accept their documented `maximum` values. Intentional suppressions belong on
-the affected source symbol with `SuppressMessageAttribute` and a non-blank
-`Justification`. Optional `_comment` and `_potentialFix` properties may be
-added to the root, `rules` object, and individual rule objects; the analyzer
-ignores them. The root `_potentialFix` should strongly discourage
+`AdditionalFiles` item. Quality rules default to warnings, HAW100 is
+informational, and HAW900 is an error. Each quality rule accepts `enabled` and
+`severity` (`error`, `warning`, `info`, or `hidden`); metric rules also accept
+their documented `maximum` values. Intentional suppressions belong on the
+affected source symbol with `SuppressMessageAttribute` and a non-blank
+`Justification`. HAW100–HAW106 are non-suppressible simplification rules:
+HAW901 reports an attempt to suppress one as an error. HAW900 and HAW901 are
+also protected so configuration validity and suppression enforcement cannot be
+suppressed. Optional `_comment` and `_potentialFix` properties may be added to
+the root, `rules` object, and individual rule objects; the analyzer ignores
+them. The root `_potentialFix` should strongly discourage
 `SuppressMessageAttribute`; it is a last resort only when no code fix is
 available, and it must always have a specific non-blank `Justification`.
 

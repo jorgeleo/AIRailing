@@ -1,6 +1,6 @@
 {
-  "_comment": "Hawthorne analyzer configuration. Rules are warnings by default. Use SuppressMessageAttribute with a non-blank Justification for intentional source-level suppressions.",
-  "_potentialFix": "First fix the code using the rule-specific guidance below. Strongly prefer refactoring, simplifying, or redesigning the code over suppression. Use SuppressMessageAttribute only when the diagnostic is intentional, unavoidable, and there is no other way to fix it; every use must include a specific, non-blank Justification.",
+  "_comment": "Hawthorne analyzer configuration. Quality rules are warnings by default; HAW100 is informational, HAW900 is an error, and HAW901 makes a suppression attempt for HAW100-HAW106, HAW900, or HAW901 an error.",
+  "_potentialFix": "First fix the code using the rule-specific guidance below. HAW100-HAW106 must be simplified or formatted rather than suppressed. For the remaining review rules, use SuppressMessageAttribute only when the diagnostic is intentional, unavoidable, and there is no other way to fix it; every use must include a specific, non-blank Justification.",
   "version": 1,
   "rules": {
     "_comment": "Each rule can set enabled and severity. Metric rules also define their maximum thresholds.",
@@ -184,48 +184,49 @@
     },
     "HAW100": {
       "_comment": "Informational abstraction density metric.",
+      "_potentialFix": "Simplify the abstraction structure or adjust the reviewed project threshold. This rule cannot be source-suppressed; HAW901 reports an attempt as an error.",
       "enabled": true,
       "minimumBehavioralTypes": 1
     },
     "HAW101": {
-      "_comment": "Reports methods whose cyclomatic complexity exceeds maximum.",
-      "_potentialFix": "Split the method into focused methods, extract branch-specific strategies, use guard clauses, simplify conditionals, or replace repetitive branching with a data-driven lookup. Reduce the number of independent paths rather than suppressing the diagnostic.",
+      "_comment": "Reports methods whose cyclomatic complexity exceeds maximum. It cannot be source-suppressed.",
+      "_potentialFix": "Split the method into focused methods, extract branch-specific strategies, use guard clauses, simplify conditionals, or replace repetitive branching with a data-driven lookup. Reduce the number of independent paths; HAW901 reports a suppression attempt as an error.",
       "enabled": true,
       "severity": "warning",
       "maximum": 10
     },
     "HAW102": {
-      "_comment": "Reports methods whose cognitive complexity exceeds maximum.",
-      "_potentialFix": "Flatten nested logic with guard clauses, extract focused methods, simplify boolean expressions, and use clear named operations or strategies. Reduce the mental branching needed to understand the method.",
+      "_comment": "Reports methods whose cognitive complexity exceeds maximum. It cannot be source-suppressed.",
+      "_potentialFix": "Flatten nested logic with guard clauses, extract focused methods, simplify boolean expressions, and use clear named operations or strategies. Reduce the mental branching needed to understand the method; HAW901 reports a suppression attempt as an error.",
       "enabled": true,
       "severity": "warning",
       "maximum": 15
     },
     "HAW103": {
-      "_comment": "Reports methods whose control-flow nesting depth exceeds maximum.",
-      "_potentialFix": "Use guard clauses, return early, extract nested operations into focused methods, and replace deeply nested conditionals with clearer control-flow or strategy objects.",
+      "_comment": "Reports methods whose control-flow nesting depth exceeds maximum. It cannot be source-suppressed.",
+      "_potentialFix": "Use guard clauses, return early, extract nested operations into focused methods, and replace deeply nested conditionals with clearer control-flow or strategy objects. HAW901 reports a suppression attempt as an error.",
       "enabled": true,
       "severity": "warning",
       "maximum": 4
     },
     "HAW104": {
-      "_comment": "Reports types that depend on more distinct external types than maximum.",
-      "_potentialFix": "Split the type by responsibility, extract cohesive collaborators, reduce constructor and field dependencies, and expose narrower focused boundaries. Remove dependencies that are only used by unrelated responsibilities.",
+      "_comment": "Reports types that depend on more distinct external types than maximum. It cannot be source-suppressed.",
+      "_potentialFix": "Split the type by responsibility, extract cohesive collaborators, reduce constructor and field dependencies, and expose narrower focused boundaries. Remove dependencies that are only used by unrelated responsibilities; HAW901 reports a suppression attempt as an error.",
       "enabled": true,
       "severity": "warning",
       "maximum": 12
     },
     "HAW105": {
-      "_comment": "Reports methods longer than either configured executable-statement or physical-line limit.",
-      "_potentialFix": "Split the method into focused operations, extract cohesive helpers, remove duplicated steps, and replace long procedural sequences with smaller domain operations or data-driven logic.",
+      "_comment": "Reports methods longer than either configured executable-statement or physical-line limit. It cannot be source-suppressed.",
+      "_potentialFix": "Split the method into focused operations, extract cohesive helpers, remove duplicated steps, and replace long procedural sequences with smaller domain operations or data-driven logic. HAW901 reports a suppression attempt as an error.",
       "enabled": true,
       "severity": "warning",
       "maximumExecutableStatements": 30,
       "maximumPhysicalLines": 50
     },
     "HAW106": {
-      "_comment": "Reports an opening curly brace or semicolon that is not immediately followed by CRLF.",
-      "_potentialFix": "Put a carriage return and line feed (CRLF) immediately after each opening curly brace and semicolon. This rule only reports the issue; it never edits source files automatically.",
+      "_comment": "Reports an opening curly brace or semicolon that is not immediately followed by CRLF. It cannot be source-suppressed.",
+      "_potentialFix": "Put a carriage return and line feed (CRLF) immediately after each opening curly brace and semicolon. This rule only reports the issue; it never edits source files automatically, and HAW901 reports a suppression attempt as an error.",
       "enabled": false,
       "severity": "warning"
     },
@@ -236,10 +237,10 @@
       "severity": "error"
     },
     "HAW901": {
-      "_comment": "Reports Hawthorne pragma suppression and SuppressMessageAttribute entries whose Justification is missing or blank.",
-      "_potentialFix": "Remove the pragma or SuppressMessageAttribute and fix the underlying code. Only if the diagnostic is intentional and unavoidable, use SuppressMessageAttribute with a specific non-blank Justification; suppression is a last resort, not a way to bypass the rule.",
+      "_comment": "Reports Hawthorne pragma suppression and SuppressMessageAttribute entries whose Justification is missing or blank. Suppressing HAW100-HAW106, HAW900, or HAW901 is always an error and cannot be disabled here.",
+      "_potentialFix": "Remove the pragma or SuppressMessageAttribute and fix the underlying code. HAW100-HAW106 must be simplified, HAW900 must be corrected, and HAW901 must remain active. For other rules, only if the diagnostic is intentional and unavoidable, use SuppressMessageAttribute with a specific non-blank Justification; suppression is a last resort, not a way to bypass the rule.",
       "enabled": true,
-      "severity": "warning"
+      "severity": "error"
     }
   }
 }

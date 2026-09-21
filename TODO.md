@@ -6,10 +6,10 @@ the status section before stopping work.
 
 ## Current status
 
-- Current phase: all next-rule catalog implementations enabled by default; regression hardening is complete
-- Last completed item: HAW020, HAW023, HAW025, HAW029, HAW030, and HAW100 implementation with focused tests, docs, and bootstrap/configuration integration
+- Current phase: all next-rule catalog implementations enabled by default; suppression-policy hardening is complete
+- Last completed item: HAW901 non-suppressible validation for HAW100–HAW106 plus governance protections for HAW900 and HAW901, with focused regression coverage and documentation
 - Next item: repository calibration and IDE checks remain manual; automated build/package gates are complete
-- Progress checkpoint: all next-rule catalog rules are enabled by default; HAW100 reports invariant metric properties and Wave 3 compilation-end rules preserve related locations.
+- Progress checkpoint: all next-rule catalog rules are enabled by default; HAW100 reports invariant metric properties, Wave 3 compilation-end rules preserve related locations, and non-suppressible source suppressions report error HAW901 even when HAW901 is disabled in configuration.
 - Blockers: none
 
 The detailed, resumable checklist for the post-v1 catalog is
@@ -30,6 +30,7 @@ remain the v1 baseline and must stay green while the next catalog is added.
 - [x] Load exactly one `hawthorne.json` from `AdditionalFiles`.
 - [x] Validate configuration and report compiler-error `HAW900` without normal analysis.
 - [x] Use source-level `SuppressMessageAttribute` suppressions with required justifications.
+- [x] Reject source suppression of HAW100–HAW106 as error HAW901; protect HAW900 configuration validity and HAW901 enforcement.
 - [x] Implement dynamic effective diagnostic severity.
 
 ## Rules, in implementation order

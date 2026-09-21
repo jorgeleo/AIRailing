@@ -5,6 +5,8 @@ namespace Hawthorne.Analyzers.Diagnostics;
 
 internal static class HawthorneDiagnosticDescriptors
 {
+    internal const string NonSuppressibleTag = "Hawthorne.NonSuppressible";
+
     private const string ArchitectureCategory = "Hawthorne.Architecture";
     private const string ComplexityCategory = "Hawthorne.Complexity";
     private const string ReliabilityCategory = "Hawthorne.Reliability";
@@ -135,29 +137,29 @@ internal static class HawthorneDiagnosticDescriptors
         DiagnosticSeverity.Info,
         isEnabledByDefault: true,
         description: "Reports the ratio of source-defined abstraction-role types to behavioral types.",
-        customTags: new[] { WellKnownDiagnosticTags.CompilationEnd });
+        customTags: new[] { WellKnownDiagnosticTags.CompilationEnd, NonSuppressibleTag });
 
-    internal static readonly DiagnosticDescriptor HAW101 = CreateComplexityWarning(
+    internal static readonly DiagnosticDescriptor HAW101 = CreateNonSuppressibleComplexityWarning(
         "HAW101",
         "Cyclomatic complexity",
         "Method '{0}' has cyclomatic complexity {1}; maximum allowed is {2}. Split branches into smaller methods or simplify the control flow.");
 
-    internal static readonly DiagnosticDescriptor HAW102 = CreateComplexityWarning(
+    internal static readonly DiagnosticDescriptor HAW102 = CreateNonSuppressibleComplexityWarning(
         "HAW102",
         "Cognitive complexity",
         "Method '{0}' has cognitive complexity {1}; maximum allowed is {2}. Flatten nesting or extract a focused method.");
 
-    internal static readonly DiagnosticDescriptor HAW103 = CreateComplexityWarning(
+    internal static readonly DiagnosticDescriptor HAW103 = CreateNonSuppressibleComplexityWarning(
         "HAW103",
         "Maximum nesting depth",
         "Method '{0}' reaches nesting depth {1}; maximum allowed is {2}. Use guard clauses or extract the nested work.");
 
-    internal static readonly DiagnosticDescriptor HAW104 = CreateComplexityWarning(
+    internal static readonly DiagnosticDescriptor HAW104 = CreateNonSuppressibleComplexityWarning(
         "HAW104",
         "Class coupling",
         "Type '{0}' depends on {1} distinct external types; maximum allowed is {2}. API surface: {3}; state/dependency: {4}; implementation: {5}. Examples: {6}. Split responsibilities or introduce a focused boundary.");
 
-    internal static readonly DiagnosticDescriptor HAW105 = CreateComplexityWarning(
+    internal static readonly DiagnosticDescriptor HAW105 = CreateNonSuppressibleComplexityWarning(
         "HAW105",
         "Method length",
         "Method length exceeds the configured limit: {0}. Split the method into focused operations.");
@@ -169,7 +171,8 @@ internal static class HawthorneDiagnosticDescriptors
         FormattingCategory,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: "Opening braces and semicolons must be followed immediately by a carriage return and line feed.");
+        description: "Opening braces and semicolons must be followed immediately by a carriage return and line feed.",
+        customTags: new[] { NonSuppressibleTag });
 
     internal static readonly DiagnosticDescriptor HAW900 = new(
         "HAW900",
@@ -179,16 +182,22 @@ internal static class HawthorneDiagnosticDescriptors
         DiagnosticSeverity.Error,
         isEnabledByDefault: true,
         description: "Hawthorne configuration must be valid before normal analyzer diagnostics are produced.",
-        customTags: new[] { WellKnownDiagnosticTags.CompilationEnd });
+        customTags: new[]
+        {
+            WellKnownDiagnosticTags.CompilationEnd,
+            WellKnownDiagnosticTags.NotConfigurable,
+            NonSuppressibleTag,
+        });
 
     internal static readonly DiagnosticDescriptor HAW901 = new(
         "HAW901",
-        "Hawthorne suppression must be justified",
-        "Hawthorne suppression '{0}' must include a non-empty Justification",
+        "Invalid Hawthorne suppression",
+        "Hawthorne suppression '{0}' is invalid: {1}",
         ConfigurationCategory,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: "Hawthorne diagnostics may be suppressed only with a non-empty justification.");
+        description: "Hawthorne diagnostics may be suppressed only with a non-empty justification when the selected rule permits suppression.",
+        customTags: new[] { NonSuppressibleTag });
 
     internal static ImmutableArray<DiagnosticDescriptor> All { get; } = ImmutableArray.Create(
         HAW001, HAW002, HAW003, HAW004, HAW005, HAW006, HAW007, HAW008, HAW010, HAW011,
@@ -196,11 +205,26 @@ internal static class HawthorneDiagnosticDescriptors
         HAW025, HAW029, HAW030, HAW100, HAW101, HAW102, HAW103, HAW104, HAW105, HAW106,
         HAW900, HAW901);
 
+    internal static ImmutableHashSet<string> NonSuppressibleRuleIds { get; } = All
+        .Where(descriptor => descriptor.CustomTags.Contains(NonSuppressibleTag))
+        .Select(descriptor => descriptor.Id)
+        .ToImmutableHashSet(StringComparer.Ordinal);
+
     private static DiagnosticDescriptor CreateArchitectureWarning(string id, string title, string messageFormat) =>
         new(id, title, messageFormat, ArchitectureCategory, DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
     private static DiagnosticDescriptor CreateComplexityWarning(string id, string title, string messageFormat) =>
         new(id, title, messageFormat, ComplexityCategory, DiagnosticSeverity.Warning, isEnabledByDefault: true);
+
+    private static DiagnosticDescriptor CreateNonSuppressibleComplexityWarning(string id, string title, string messageFormat) =>
+        new(
+            id,
+            title,
+            messageFormat,
+            ComplexityCategory,
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            customTags: new[] { NonSuppressibleTag });
 
     private static DiagnosticDescriptor CreateReliabilityWarning(string id, string title, string messageFormat) =>
         new(id, title, messageFormat, ReliabilityCategory, DiagnosticSeverity.Warning, isEnabledByDefault: true);

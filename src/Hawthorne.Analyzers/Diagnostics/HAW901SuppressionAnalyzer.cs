@@ -21,7 +21,10 @@ internal static class HAW901SuppressionAnalyzer
             SyntaxKind.Attribute);
     }
 
-    private static void AnalyzePragma(PragmaWarningDirectiveTriviaSyntax directive, SyntaxNodeAnalysisContext context, HawthorneConfiguration configuration)
+    private static void AnalyzePragma(
+        PragmaWarningDirectiveTriviaSyntax directive,
+        SyntaxNodeAnalysisContext context,
+        HawthorneConfiguration configuration)
     {
         if (!directive.DisableOrRestoreKeyword.IsKind(SyntaxKind.DisableKeyword)) return;
 
@@ -32,18 +35,21 @@ internal static class HAW901SuppressionAnalyzer
 
         if (suppressedIds.Length > 0)
         {
-            context.ReportHawthorneDiagnostic(HawthorneDiagnosticDescriptors.HAW901, directive.GetLocation(), configuration, string.Join(", ", suppressedIds));
+            ReportPragmaSuppressions(suppressedIds, directive.GetLocation(), context, configuration);
             return;
         }
 
         if (directive.ErrorCodes.Count == 0)
         {
             // A codeless disable suppresses every warning, including all Hawthorne rules.
-            context.ReportHawthorneDiagnostic(HawthorneDiagnosticDescriptors.HAW901, directive.GetLocation(), configuration, "all diagnostics");
+            ReportNonSuppressibleSuppression("all diagnostics", directive.GetLocation(), context);
         }
     }
 
-    private static void AnalyzeSuppressMessage(AttributeSyntax attribute, SyntaxNodeAnalysisContext context, HawthorneConfiguration configuration)
+    private static void AnalyzeSuppressMessage(
+        AttributeSyntax attribute,
+        SyntaxNodeAnalysisContext context,
+        HawthorneConfiguration configuration)
     {
         var suppressMessageType = context.SemanticModel.Compilation.GetTypeByMetadataName(
             "System.Diagnostics.CodeAnalysis.SuppressMessageAttribute");
@@ -65,16 +71,108 @@ internal static class HAW901SuppressionAnalyzer
             return;
         }
 
+        if (HawthorneDiagnosticDescriptors.NonSuppressibleRuleIds.Contains(checkId))
+        {
+            ReportNonSuppressibleSuppression(checkId, attribute.GetLocation(), context);
+            return;
+        }
+
         var justification = arguments.Value
             .FirstOrDefault(argument => argument.NameEquals?.Name.Identifier.ValueText == "Justification");
         if (justification is null || string.IsNullOrWhiteSpace(GetConstantString(context.SemanticModel, justification.Expression)))
         {
+            ReportJustificationRequired(checkId, attribute.GetLocation(), context, configuration);
+        }
+    }
+
+    private static void ReportPragmaSuppressions(
+        IEnumerable<string> suppressedIds,
+        Location location,
+        SyntaxNodeAnalysisContext context,
+        HawthorneConfiguration configuration)
+    {
+        var nonSuppressibleIds = suppressedIds
+            .Where(HawthorneDiagnosticDescriptors.NonSuppressibleRuleIds.Contains)
+            .ToArray();
+        if (nonSuppressibleIds.Length > 0)
+        {
+            ReportNonSuppressibleSuppression(string.Join(", ", nonSuppressibleIds), location, context);
+        }
+
+        var suppressibleIds = suppressedIds
+            .Where(id => !HawthorneDiagnosticDescriptors.NonSuppressibleRuleIds.Contains(id))
+            .ToArray();
+        if (suppressibleIds.Length > 0)
+        {
             context.ReportHawthorneDiagnostic(
                 HawthorneDiagnosticDescriptors.HAW901,
-                attribute.GetLocation(),
+                location,
                 configuration,
-                checkId);
+                string.Join(", ", suppressibleIds),
+                "use SuppressMessageAttribute with a specific non-empty Justification instead");
         }
+    }
+
+    private static void ReportJustificationRequired(
+        string ruleId,
+        Location location,
+        SyntaxNodeAnalysisContext context,
+        HawthorneConfiguration configuration) =>
+        context.ReportHawthorneDiagnostic(
+            HawthorneDiagnosticDescriptors.HAW901,
+            location,
+            configuration,
+            ruleId,
+            "it must include a non-empty Justification");
+
+    private static void ReportNonSuppressibleSuppression(
+        string ruleIds,
+        Location location,
+        SyntaxNodeAnalysisContext context) =>
+        ReportInvalidSuppression(
+            ruleIds,
+            location,
+            context,
+            GetRequiredRemediation(ruleIds));
+
+    private static string GetRequiredRemediation(string ruleIds)
+    {
+        if (ruleIds.Contains("HAW900", StringComparison.Ordinal))
+        {
+            return "the configuration must be corrected rather than suppressed";
+        }
+
+        if (ruleIds.Contains("HAW901", StringComparison.Ordinal))
+        {
+            return "this validation must remain enabled rather than suppressed";
+        }
+
+        return "this rule must be simplified rather than suppressed";
+    }
+
+    private static void ReportInvalidSuppression(
+        string ruleIds,
+        Location location,
+        SyntaxNodeAnalysisContext context,
+        string reason)
+    {
+        // HAW901's own suppression attempt cannot be reported at the suppressed syntax.
+        // A location-free compiler error remains visible while preserving the attempted
+        // suppression as the diagnostic message argument.
+        var reportLocation = ruleIds.Contains("HAW901", StringComparison.Ordinal)
+            ? Location.None
+            : location;
+        context.ReportDiagnostic(Diagnostic.Create(
+            HawthorneDiagnosticDescriptors.HAW901,
+            reportLocation,
+            DiagnosticSeverity.Error,
+            additionalLocations: null,
+            properties: null,
+            messageArgs: new object[]
+            {
+                ruleIds,
+                reason,
+            }));
     }
 
     private static string? GetConstantString(SemanticModel semanticModel, ExpressionSyntax expression) =>

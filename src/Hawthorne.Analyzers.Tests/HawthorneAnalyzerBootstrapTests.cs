@@ -47,6 +47,24 @@ public sealed class HawthorneAnalyzerBootstrapTests
     }
 
     [Fact]
+    public void SupportedDiagnostics_MarkOnlySimplificationAndGovernanceRulesAsNonSuppressible()
+    {
+        var nonSuppressibleIds = new HawthorneAnalyzerBootstrap()
+            .SupportedDiagnostics
+            .Where(descriptor => descriptor.CustomTags.Contains("Hawthorne.NonSuppressible"))
+            .Select(descriptor => descriptor.Id)
+            .OrderBy(id => id)
+            .ToArray();
+
+        Assert.Equal(
+            new[]
+            {
+                "HAW100", "HAW101", "HAW102", "HAW103", "HAW104", "HAW105", "HAW106", "HAW900", "HAW901",
+            },
+            nonSuppressibleIds);
+    }
+
+    [Fact]
     public async Task Analyze_WhenConfigurationIsMalformed_ReportsCompilerErrorHAW900AtTheConfigurationFile()
     {
         var compilation = CSharpCompilation.Create(
@@ -173,7 +191,7 @@ public sealed class HawthorneAnalyzerBootstrapTests
     }
 
     [Fact]
-    public async Task Analyze_WhenMethodLengthHasAJustifiedSuppressMessage_DoesNotReportHAW105()
+    public async Task Analyze_WhenMethodLengthHasAJustifiedSuppressMessage_ReportsErrorHAW901()
     {
         var statements = string.Concat(Enumerable.Repeat("int value = 0;", 31));
         var compilation = CSharpCompilation.Create(
@@ -185,7 +203,10 @@ public sealed class HawthorneAnalyzerBootstrapTests
             .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()))
             .GetAnalyzerDiagnosticsAsync();
 
-        Assert.Empty(diagnostics);
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("HAW901", diagnostic.Id);
+        Assert.Equal(DiagnosticSeverity.Error, diagnostic.Severity);
+        Assert.Contains("HAW105", diagnostic.GetMessage());
     }
 
     [Theory]
@@ -221,6 +242,63 @@ public sealed class HawthorneAnalyzerBootstrapTests
 
         var diagnostic = Assert.Single(diagnostics);
         Assert.Equal("HAW901", diagnostic.Id);
+    }
+
+    [Theory]
+    [InlineData("HAW100")]
+    [InlineData("HAW101")]
+    [InlineData("HAW102")]
+    [InlineData("HAW103")]
+    [InlineData("HAW104")]
+    [InlineData("HAW105")]
+    [InlineData("HAW106")]
+    [InlineData("HAW900")]
+    [InlineData("HAW901")]
+    public async Task Analyze_WhenNonSuppressibleRuleHasJustifiedSuppressMessage_ReportsErrorHAW901(string ruleId)
+    {
+        var source = $"using System.Diagnostics.CodeAnalysis; [SuppressMessage(\"Hawthorne\", \"{ruleId}\", Justification = \"Intentional.\")] class Example {{ }}";
+        var compilation = CSharpCompilation.Create(
+            "TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText(source, path: "/project/Example.cs") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location), MetadataReference.CreateFromFile(typeof(SuppressMessageAttribute).Assembly.Location) });
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("HAW901", diagnostic.Id);
+        Assert.Equal(DiagnosticSeverity.Error, diagnostic.Severity);
+        Assert.Contains(ruleId, diagnostic.GetMessage());
+        Assert.False(diagnostic.IsSuppressed);
+    }
+
+    [Fact]
+    public async Task Analyze_WhenNonSuppressibleRuleIsSuppressedAndHAW901IsDisabledInConfiguration_ReportsErrorHAW901()
+    {
+        const string source = """
+            using System.Diagnostics.CodeAnalysis;
+            [SuppressMessage("Hawthorne.Complexity", "HAW105", Justification = "Intentional.")]
+            class Example { }
+            """;
+        var compilation = CSharpCompilation.Create(
+            "TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText(source, path: "/project/Example.cs") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location), MetadataReference.CreateFromFile(typeof(SuppressMessageAttribute).Assembly.Location) });
+        var options = new CompilationWithAnalyzersOptions(
+            new AnalyzerOptions(ImmutableArray.Create<AdditionalText>(new TestAdditionalText(
+                "/project/hawthorne.json",
+                "{ \"version\": 1, \"rules\": { \"HAW901\": { \"enabled\": false, \"severity\": \"hidden\" } } }"))),
+            null,
+            true,
+            false,
+            false);
+
+        var diagnostics = await compilation
+            .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), options)
+            .GetAnalyzerDiagnosticsAsync();
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("HAW901", diagnostic.Id);
+        Assert.Equal(DiagnosticSeverity.Error, diagnostic.Severity);
     }
 
     [Fact]
@@ -653,7 +731,37 @@ public sealed class HawthorneAnalyzerBootstrapTests
         var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
         var diagnostic = Assert.Single(diagnostics);
         Assert.Equal("HAW901", diagnostic.Id);
+        Assert.Equal(DiagnosticSeverity.Warning, diagnostic.Severity);
         Assert.Contains("HAW003", diagnostic.GetMessage());
+    }
+
+    [Fact]
+    public async Task Analyze_WhenPragmaSuppressesNonSuppressibleHawthorneRule_ReportsErrorHAW901()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly", new[] { CSharpSyntaxTree.ParseText("#pragma warning disable HAW105\nclass Example { }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("HAW901", diagnostic.Id);
+        Assert.Equal(DiagnosticSeverity.Error, diagnostic.Severity);
+        Assert.Contains("HAW105", diagnostic.GetMessage());
+    }
+
+    [Fact]
+    public async Task Analyze_WhenPragmaSuppressesHAW901_ReportsVisibleErrorHAW901()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly", new[] { CSharpSyntaxTree.ParseText("#pragma warning disable HAW901\nclass Example { }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("HAW901", diagnostic.Id);
+        Assert.Equal(DiagnosticSeverity.Error, diagnostic.Severity);
+        Assert.False(diagnostic.IsSuppressed);
+        Assert.Equal(Location.None, diagnostic.Location);
     }
 
     [Fact]

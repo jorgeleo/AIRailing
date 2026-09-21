@@ -30,8 +30,9 @@ new design decision, not an implementation shortcut.
   only. Referenced assemblies are evidence only where a framework type must be
   recognized; they are never diagnostic targets.
 - Retain the existing local, justified `SuppressMessageAttribute` policy and
-  HAW901 enforcement. A new rule must work with a justified source-level
-  suppression and must not make `#pragma` a supported escape hatch.
+  HAW901 enforcement. A new review rule must work with a justified source-level
+  suppression unless it is explicitly tagged as non-suppressible; no rule may
+  make `#pragma` a supported escape hatch.
 - Keep analysis logic outside diagnostic registration classes. Each helper has
   one narrow responsibility; do not create a universal visitor, a global
   mutable rule state object, or a per-syntax-node compilation scan.

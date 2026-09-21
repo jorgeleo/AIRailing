@@ -6,9 +6,10 @@ structural complexity. It is aimed at codebases with many small seams — the
 kind of layered code that LLMs and busy humans tend to generate when adding an
 interface, factory, or wrapper without a real boundary behind it.
 
-Every rule is a **warning by default**, and the package works with zero
-configuration. Add a `hawthorne.json` file to a project to tune thresholds,
-disable rules, or tune severity.
+Quality rules are warnings by default (HAW100 is informational and HAW900 is a
+compiler error). Add a `hawthorne.json` file to a project to tune thresholds,
+disable review rules, or tune severity. HAW901 makes an attempted source
+suppression of HAW100–HAW106, HAW900, or HAW901 an error.
 
 ## Installation
 
@@ -69,7 +70,7 @@ The .NET SDK resolves GitHub Packages with your `GITHUB_TOKEN` automatically.
 | HAW105 | Method length | 30 statements / 50 lines |
 | HAW106 | Missing CRLF after opening braces and semicolons | opt-in |
 | HAW900 | Invalid `hawthorne.json` | compile error |
-| HAW901 | Unjustified Hawthorne suppression or `#pragma warning disable` | — |
+| HAW901 | Invalid Hawthorne suppression or `#pragma warning disable` | warning / error |
 
 Each rule has a dedicated page in [Docs/rules/](Docs/rules/) with what it
 reports, what it deliberately ignores, and its configuration knobs.
@@ -135,8 +136,9 @@ A complete example:
 - `_comment` and `_potentialFix` properties are optional metadata for human and
   AI readers and are ignored by the analyzer. `_potentialFix` values should
   guide code changes; strongly prefer those fixes over suppression.
-- Every rule accepts `enabled` (boolean) and `severity`
-  (`error`, `warning`, `info`, or `hidden`).
+- Every quality rule accepts `enabled` (boolean) and `severity`
+  (`error`, `warning`, `info`, or `hidden`). HAW901's error validation for a
+  non-suppressible rule cannot be disabled or downgraded.
 - Metric rules accept their documented `maximum` values.
 - HAW106 is opt-in; enable it to report opening braces and semicolons that are
   not immediately followed by `\r\n`. It reports only and never edits files.
@@ -163,10 +165,10 @@ The `Justification` must be non-empty:
 using System.Diagnostics.CodeAnalysis;
 
 [SuppressMessage(
-    "Hawthorne.Complexity",
-    "HAW105",
-    Justification = "Generated controller; hand-editing is not supported.")]
-void GeneratedControllerMethod() { /* ... */ }
+    "Hawthorne.Architecture",
+    "HAW001",
+    Justification = "The independently published plugin contract currently has one implementation.")]
+interface IPluginContract { }
 ```
 
 - A pragma that names any Hawthorne rule ID is reported as **HAW901**.
@@ -174,6 +176,13 @@ void GeneratedControllerMethod() { /* ... */ }
   Hawthorne's rules included, so it is reported as well.
 - A Hawthorne `SuppressMessageAttribute` without a non-blank `Justification`
   is reported as **HAW901**.
+- HAW100–HAW106 must be remediated rather than source-suppressed; a
+  `SuppressMessageAttribute` or `#pragma` attempt is reported as an
+  **error HAW901**. HAW900 (configuration validity) and HAW901 itself have the
+  same protection.
+- Other rule IDs may use a specific, non-blank justification when a real
+  external contract, protocol, provider, reflection boundary, or compatibility
+  obligation makes the local code shape intentional.
 
 Keeping the justification next to the suppressed code makes the decision
 reviewable at the point where it applies.

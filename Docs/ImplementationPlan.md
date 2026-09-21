@@ -97,12 +97,14 @@ Intentional suppressions must use Roslyn's standard attribute with a non-blank
 justification:
 
 ```csharp
-[SuppressMessage("Hawthorne.Complexity", "HAW105",
-    Justification = "Generated boundary; hand-editing is not supported.")]
+[SuppressMessage("Hawthorne.Architecture", "HAW001",
+    Justification = "Independently published plugin contract currently has one implementation.")]
 ```
 
 `HAW901` reports Hawthorne suppressions with a blank justification and pragma
-suppression attempts.
+suppression attempts. HAW100–HAW106 must be simplified rather than suppressed;
+an attempt to suppress one is an error HAW901. HAW900 and HAW901 are likewise
+protected governance diagnostics.
 
 ---
 
@@ -1101,10 +1103,11 @@ Potential diagnostic:
 HAW901 — Hawthorne suppression must be justified
 ```
 
-`HAW901` is a warning. It reports whenever a pragma attempts to suppress one or
-more `HAW*` diagnostics, or a `SuppressMessageAttribute` for a Hawthorne rule
-has a blank justification. Pragmas for unrelated compiler or analyzer
-diagnostics are ignored.
+`HAW901` is a warning for ordinary invalid suppressions. It reports whenever a
+pragma attempts to suppress one or more `HAW*` diagnostics, or a
+`SuppressMessageAttribute` for a Hawthorne rule has a blank justification.
+Attempts to suppress HAW100–HAW106, HAW900, or HAW901 are errors. Pragmas for
+unrelated compiler or analyzer diagnostics are ignored.
 
 ---
 
@@ -1327,7 +1330,10 @@ Deliverables:
 
 Acceptance criteria:
 
-- A justified `SuppressMessageAttribute` suppresses the targeted diagnostic.
+- A justified `SuppressMessageAttribute` suppresses a targeted rule that
+  permits suppression.
+- A justified `SuppressMessageAttribute` for HAW100–HAW106, HAW900, or HAW901
+  produces an error HAW901.
 - The same diagnostic without an attribute is still reported.
 - Empty or missing `Justification` produces `HAW901`.
 - Pragmas for Hawthorne diagnostics produce `HAW901`.
@@ -1342,7 +1348,7 @@ Acceptance criteria:
 
 - Executable statement threshold works.
 - Physical line threshold works.
-- Justified `SuppressMessageAttribute` suppression works.
+- A justified `SuppressMessageAttribute` for HAW105 produces an error HAW901.
 - Rule enable/disable works.
 
 ---
@@ -1504,7 +1510,8 @@ Use `SuppressMessageAttribute` with a non-blank `Justification` instead.
 
 Acceptance criteria:
 
-- Every pragma attempting to suppress one or more `HAW*` diagnostics produces a HAW901 warning.
+- Every pragma attempting to suppress one or more `HAW*` diagnostics produces
+  HAW901; attempts targeting HAW100–HAW106, HAW900, or HAW901 are errors.
 - Pragmas for unrelated compiler/analyzer diagnostics are ignored.
 
 ---
@@ -1641,7 +1648,8 @@ Hawthorne v1 is complete when:
 - All nine primary rules are implemented.
 - `hawthorne.json` controls thresholds and rule enablement.
 - Configuration parsing is validated and tested.
-- Justified `SuppressMessageAttribute` suppressions work.
+- Justified `SuppressMessageAttribute` suppressions work only for rules that
+  permit them; HAW100–HAW106, HAW900, and HAW901 reject them with an error.
 - Every Hawthorne suppression requires a non-blank `Justification`.
 - No supported JSON exception mechanism exists.
 - Hawthorne pragma suppression and unjustified attributes are reported by HAW901.
