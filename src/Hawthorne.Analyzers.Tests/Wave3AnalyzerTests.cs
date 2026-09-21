@@ -188,6 +188,17 @@ public sealed class Wave3AnalyzerTests
     }
 
     [Fact]
+    public async Task LoggingNoise_IgnoresSynthesizedRecordMembers()
+    {
+        var diagnostics = await AnalyzerTestHost.AnalyzeAsync("public record Activity(string Name);", """
+            { "version": 1, "rules": { "HAW029": { "enabled": true } } }
+            """);
+
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Id == "AD0001");
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Id == "HAW029");
+    }
+
+    [Fact]
     public async Task CopyPaste_ReportsOneStableClusterWithRelatedMethods()
     {
         var diagnostics = await AnalyzerTestHost.AnalyzeAsync("""

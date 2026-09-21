@@ -26,7 +26,11 @@ internal static class HAW029LoggingNoiseAnalyzer
 
     private static bool HasLifecycleLog(IMethodSymbol method, Compilation compilation, Hawthorne029Configuration options, CancellationToken cancellationToken)
     {
-        var declaration = (MethodDeclarationSyntax)method.DeclaringSyntaxReferences[0].GetSyntax(cancellationToken);
+        if (method.DeclaringSyntaxReferences[0].GetSyntax(cancellationToken) is not MethodDeclarationSyntax declaration)
+        {
+            return false;
+        }
+
         var model = compilation.GetSemanticModel(declaration.SyntaxTree);
         foreach (var invocation in declaration.DescendantNodes().OfType<InvocationExpressionSyntax>())
         {
