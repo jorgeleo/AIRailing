@@ -27,7 +27,7 @@ public sealed class HawthorneAnalyzerBootstrapTests
     }
 
     [Fact]
-    public void SupportedDiagnostics_ExposeTheCompleteVersionOneCatalog()
+    public void SupportedDiagnostics_ExposeTheCompleteCatalog()
     {
         var supportedIds = new HawthorneAnalyzerBootstrap()
             .SupportedDiagnostics
@@ -38,7 +38,10 @@ public sealed class HawthorneAnalyzerBootstrapTests
         Assert.Equal(
             new[]
             {
-                "HAW001", "HAW002", "HAW003", "HAW004", "HAW101", "HAW102", "HAW103", "HAW104", "HAW105", "HAW106", "HAW900", "HAW901",
+                "HAW001", "HAW002", "HAW003", "HAW004", "HAW005", "HAW006", "HAW007", "HAW008", "HAW010", "HAW011",
+                "HAW013", "HAW014", "HAW015", "HAW016", "HAW017", "HAW018", "HAW020", "HAW021", "HAW023", "HAW024",
+                "HAW025", "HAW029", "HAW030", "HAW100", "HAW101", "HAW102", "HAW103", "HAW104", "HAW105", "HAW106",
+                "HAW900", "HAW901",
             },
             supportedIds);
     }

@@ -1,3 +1,4 @@
+using Hawthorne.Analyzers.Analysis.Architecture;
 using Hawthorne.Analyzers.Configuration;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -13,8 +14,15 @@ internal static class HAW003PassThroughAnalyzer
 
     private static void Analyze(ClassDeclarationSyntax type, SyntaxNodeAnalysisContext context, HawthorneConfiguration configuration)
     {
+        if (configuration.GetRule("HAW005").IsEnabled &&
+            HAW005NeedlessWrapperAnalyzer.TryGetViolation(type, context.SemanticModel, configuration.Wrapper, out _))
+        {
+            return;
+        }
+
         var methods = type.Members.OfType<MethodDeclarationSyntax>().ToArray();
-        var forwarding = methods.Where(method => IsForwarding(method, context.SemanticModel)).ToArray();
+        var forwarding = methods.Where(method =>
+            ForwardingMethodClassifier.TryGetForwardedDependency(method, context.SemanticModel, out _)).ToArray();
         if (forwarding.Length >= 3 && forwarding.Length / (double)methods.Length >= 0.80)
         {
             context.ReportHawthorneDiagnostic(HawthorneDiagnosticDescriptors.HAW003, type.Identifier.GetLocation(), configuration,
@@ -29,35 +37,4 @@ internal static class HAW003PassThroughAnalyzer
         }
     }
 
-    private static bool IsForwarding(MethodDeclarationSyntax method, SemanticModel semanticModel)
-    {
-        var methodSymbol = semanticModel.GetDeclaredSymbol(method);
-        if (methodSymbol is null || IsRequiredContractMethod(methodSymbol)) return false;
-
-        var expression = method.ExpressionBody?.Expression ??
-            (method.Body?.Statements.Count == 1 && method.Body.Statements[0] is ReturnStatementSyntax returned ? returned.Expression : null);
-        var invocation = expression as InvocationExpressionSyntax ?? (expression as AwaitExpressionSyntax)?.Expression as InvocationExpressionSyntax;
-        if (invocation?.Expression is not MemberAccessExpressionSyntax memberAccess ||
-            !IsDependencyReceiver(memberAccess.Expression, semanticModel))
-        {
-            return false;
-        }
-
-        return invocation.ArgumentList.Arguments.Count == method.ParameterList.Parameters.Count &&
-            invocation.ArgumentList.Arguments.Zip(method.ParameterList.Parameters, (argument, parameter) =>
-                argument.Expression is IdentifierNameSyntax identifier && identifier.Identifier.ValueText == parameter.Identifier.ValueText).All(value => value);
-    }
-
-    private static bool IsDependencyReceiver(ExpressionSyntax receiver, SemanticModel semanticModel) =>
-        semanticModel.GetSymbolInfo(receiver).Symbol is IFieldSymbol or IPropertySymbol or IParameterSymbol;
-
-    private static bool IsRequiredContractMethod(IMethodSymbol method)
-    {
-        if (method.IsOverride || method.ExplicitInterfaceImplementations.Length > 0) return true;
-
-        return method.ContainingType.AllInterfaces
-            .SelectMany(@interface => @interface.GetMembers().OfType<IMethodSymbol>())
-            .Any(interfaceMethod => SymbolEqualityComparer.Default.Equals(
-                method.ContainingType.FindImplementationForInterfaceMember(interfaceMethod), method));
-    }
 }

@@ -25,6 +25,19 @@ internal static class DiagnosticReportingExtensions
         Location location,
         HawthorneConfiguration configuration,
         params object[] messageArguments)
+        => CreateHawthorneDiagnosticWithDefaultSeverity(
+            descriptor,
+            location,
+            configuration,
+            configuration.GetRule(descriptor.Id).Severity,
+            messageArguments);
+
+    internal static Diagnostic? CreateHawthorneDiagnosticWithDefaultSeverity(
+        DiagnosticDescriptor descriptor,
+        Location location,
+        HawthorneConfiguration configuration,
+        DiagnosticSeverity defaultSeverity,
+        params object[] messageArguments)
     {
         var rule = configuration.GetRule(descriptor.Id);
         if (!rule.IsEnabled)
@@ -35,7 +48,7 @@ internal static class DiagnosticReportingExtensions
         return Diagnostic.Create(
             descriptor,
             location,
-            rule.Severity,
+            rule.IsSeverityConfigured ? rule.Severity : defaultSeverity,
             additionalLocations: null,
             properties: null,
             messageArgs: messageArguments);

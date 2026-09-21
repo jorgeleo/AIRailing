@@ -6,10 +6,14 @@ the status section before stopping work.
 
 ## Current status
 
-- Current phase: Implementation complete; awaiting user-owned release readiness
-- Last completed item: HAW901, sample consumer, and rule/configuration documentation
-- Next item: user-owned release readiness items below
+- Current phase: next-rule catalog Wave 1 implementation in progress
+- Last completed item: HAW005, HAW007, and HAW008 implementation with full test/build verification
+- Next item: HAW016 Fake Async implementation from focused failing tests
 - Blockers: none
+
+The detailed, resumable checklist for the post-v1 catalog is
+[`Docs/NextRulesTodo.md`](Docs/NextRulesTodo.md). The completed items below
+remain the v1 baseline and must stay green while the next catalog is added.
 
 ## Foundation
 

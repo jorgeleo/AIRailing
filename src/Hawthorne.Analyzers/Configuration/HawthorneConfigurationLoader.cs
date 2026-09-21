@@ -85,13 +85,59 @@ internal static class HawthorneConfigurationLoader
                     return HawthorneConfigurationLoadResult.Invalid(enabledError, configurationFiles[0]);
                 }
 
-                var severity = GetSeverity(rule.Name, rule.Value, defaultRule.Severity, out var severityError);
+                var severity = GetSeverity(
+                    rule.Name,
+                    rule.Value,
+                    defaultRule.Severity,
+                    out var isSeverityConfigured,
+                    out var severityError);
                 if (severityError is not null)
                 {
                     return HawthorneConfigurationLoadResult.Invalid(severityError, configurationFiles[0]);
                 }
 
-                configuration = configuration.WithRule(rule.Name, new HawthorneRuleConfiguration(enabled, severity));
+                configuration = configuration.WithRule(rule.Name, new HawthorneRuleConfiguration(
+                    enabled,
+                    severity,
+                    isSeverityConfigured));
+                if (rule.Name == "HAW005")
+                {
+                    var wrapper = GetWrapper(rule.Name, rule.Value, configuration.Wrapper, out var wrapperError);
+                    if (wrapperError is not null)
+                    {
+                        return HawthorneConfigurationLoadResult.Invalid(wrapperError, configurationFiles[0]);
+                    }
+
+                    configuration = configuration.WithWrapper(wrapper);
+                }
+                if (rule.Name == "HAW007")
+                {
+                    var dependencies = GetConstructorDependencies(
+                        rule.Name,
+                        rule.Value,
+                        configuration.ConstructorDependencies,
+                        out var dependencyError);
+                    if (dependencyError is not null)
+                    {
+                        return HawthorneConfigurationLoadResult.Invalid(dependencyError, configurationFiles[0]);
+                    }
+
+                    configuration = configuration.WithConstructorDependencies(dependencies);
+                }
+                if (rule.Name == "HAW008")
+                {
+                    var booleanControlFlow = GetBooleanControlFlow(
+                        rule.Name,
+                        rule.Value,
+                        configuration.BooleanControlFlow,
+                        out var booleanControlFlowError);
+                    if (booleanControlFlowError is not null)
+                    {
+                        return HawthorneConfigurationLoadResult.Invalid(booleanControlFlowError, configurationFiles[0]);
+                    }
+
+                    configuration = configuration.WithBooleanControlFlow(booleanControlFlow);
+                }
                 if (rule.Name == "HAW105")
                 {
                     var methodLength = GetMethodLength(rule.Name, rule.Value, configuration.MethodLength, out var methodLengthError);
@@ -163,20 +209,28 @@ internal static class HawthorneConfigurationLoader
         return default;
     }
 
-    private static DiagnosticSeverity GetSeverity(string ruleId, JsonElement rule, DiagnosticSeverity defaultValue, out string? errorMessage)
+    private static DiagnosticSeverity GetSeverity(
+        string ruleId,
+        JsonElement rule,
+        DiagnosticSeverity defaultValue,
+        out bool isConfigured,
+        out string? errorMessage)
     {
         if (!rule.TryGetProperty("severity", out var severity))
         {
+            isConfigured = false;
             errorMessage = null;
             return defaultValue;
         }
 
         if (severity.ValueKind != JsonValueKind.String)
         {
+            isConfigured = false;
             errorMessage = $"hawthorne.json.rules.{ruleId}.severity must be error, warning, info, or hidden.";
             return default;
         }
 
+        isConfigured = true;
         errorMessage = null;
         return severity.GetString() switch
         {
@@ -184,12 +238,13 @@ internal static class HawthorneConfigurationLoader
             "warning" => DiagnosticSeverity.Warning,
             "info" => DiagnosticSeverity.Info,
             "hidden" => DiagnosticSeverity.Hidden,
-            _ => InvalidSeverity(ruleId, out errorMessage),
+            _ => InvalidSeverity(ruleId, out isConfigured, out errorMessage),
         };
     }
 
-    private static DiagnosticSeverity InvalidSeverity(string ruleId, out string? errorMessage)
+    private static DiagnosticSeverity InvalidSeverity(string ruleId, out bool isConfigured, out string? errorMessage)
     {
+        isConfigured = false;
         errorMessage = $"hawthorne.json.rules.{ruleId}.severity must be error, warning, info, or hidden.";
         return default;
     }
@@ -204,6 +259,227 @@ internal static class HawthorneConfigurationLoader
 
         var lines = GetPositiveInteger(ruleId, rule, "maximumPhysicalLines", defaults.MaximumPhysicalLines, out errorMessage);
         return errorMessage is null ? new Hawthorne105Configuration(statements, lines) : defaults;
+    }
+
+    private static Hawthorne005Configuration GetWrapper(
+        string ruleId,
+        JsonElement rule,
+        Hawthorne005Configuration defaults,
+        out string? errorMessage)
+    {
+        var methods = GetPositiveInteger(
+            ruleId,
+            rule,
+            "minimumForwardingMethods",
+            defaults.MinimumForwardingMethods,
+            out errorMessage);
+        if (errorMessage is not null)
+        {
+            return defaults;
+        }
+
+        var ratio = GetUnitIntervalDouble(
+            ruleId,
+            rule,
+            "minimumForwardingRatio",
+            defaults.MinimumForwardingRatio,
+            out errorMessage);
+        if (errorMessage is not null)
+        {
+            return defaults;
+        }
+
+        var requiresRoleSuffix = GetBoolean(
+            ruleId,
+            rule,
+            "requireRoleSuffix",
+            defaults.RequireRoleSuffix,
+            out errorMessage);
+        if (errorMessage is not null)
+        {
+            return defaults;
+        }
+
+        var suffixes = GetNonEmptyStringArray(
+            ruleId,
+            rule,
+            "roleSuffixes",
+            defaults.RoleSuffixes,
+            out errorMessage);
+        return errorMessage is null
+            ? new Hawthorne005Configuration(methods, ratio, requiresRoleSuffix, suffixes)
+            : defaults;
+    }
+
+    private static Hawthorne007Configuration GetConstructorDependencies(
+        string ruleId,
+        JsonElement rule,
+        Hawthorne007Configuration defaults,
+        out string? errorMessage)
+    {
+        var maximum = GetPositiveInteger(
+            ruleId,
+            rule,
+            "maximumDependencies",
+            defaults.MaximumDependencies,
+            out errorMessage);
+        if (errorMessage is not null)
+        {
+            return defaults;
+        }
+
+        var excludeOptionWrappers = GetBoolean(
+            ruleId,
+            rule,
+            "excludeOptionWrappers",
+            defaults.ExcludeOptionWrappers,
+            out errorMessage);
+        if (errorMessage is not null)
+        {
+            return defaults;
+        }
+
+        var suffixes = GetNonEmptyStringArray(
+            ruleId,
+            rule,
+            "configurationTypeSuffixes",
+            defaults.ConfigurationTypeSuffixes,
+            out errorMessage);
+        return errorMessage is null
+            ? new Hawthorne007Configuration(maximum, excludeOptionWrappers, suffixes)
+            : defaults;
+    }
+
+    private static Hawthorne008Configuration GetBooleanControlFlow(
+        string ruleId,
+        JsonElement rule,
+        Hawthorne008Configuration defaults,
+        out string? errorMessage)
+    {
+        var warningCount = GetPositiveInteger(
+            ruleId,
+            rule,
+            "warningParameterCount",
+            defaults.WarningParameterCount,
+            out errorMessage);
+        if (errorMessage is not null)
+        {
+            return defaults;
+        }
+
+        var errorCount = GetPositiveInteger(
+            ruleId,
+            rule,
+            "errorParameterCount",
+            defaults.ErrorParameterCount,
+            out errorMessage);
+        if (errorMessage is not null)
+        {
+            return defaults;
+        }
+
+        if (errorCount < warningCount)
+        {
+            errorMessage = $"hawthorne.json.rules.{ruleId}.errorParameterCount must be greater than or equal to warningParameterCount.";
+            return defaults;
+        }
+
+        var requiresDirectUse = GetBoolean(
+            ruleId,
+            rule,
+            "requireDirectControlFlowUse",
+            defaults.RequireDirectControlFlowUse,
+            out errorMessage);
+        return errorMessage is null
+            ? new Hawthorne008Configuration(warningCount, errorCount, requiresDirectUse)
+            : defaults;
+    }
+
+    private static bool GetBoolean(
+        string ruleId,
+        JsonElement rule,
+        string propertyName,
+        bool defaultValue,
+        out string? errorMessage)
+    {
+        if (!rule.TryGetProperty(propertyName, out var value))
+        {
+            errorMessage = null;
+            return defaultValue;
+        }
+
+        if (value.ValueKind is JsonValueKind.True or JsonValueKind.False)
+        {
+            errorMessage = null;
+            return value.GetBoolean();
+        }
+
+        errorMessage = $"hawthorne.json.rules.{ruleId}.{propertyName} must be a boolean.";
+        return default;
+    }
+
+    private static double GetUnitIntervalDouble(
+        string ruleId,
+        JsonElement rule,
+        string propertyName,
+        double defaultValue,
+        out string? errorMessage)
+    {
+        if (!rule.TryGetProperty(propertyName, out var value))
+        {
+            errorMessage = null;
+            return defaultValue;
+        }
+
+        if (value.ValueKind == JsonValueKind.Number && value.TryGetDouble(out var parsed) && parsed > 0 && parsed <= 1)
+        {
+            errorMessage = null;
+            return parsed;
+        }
+
+        errorMessage = $"hawthorne.json.rules.{ruleId}.{propertyName} must be a number greater than zero and at most one.";
+        return default;
+    }
+
+    private static ImmutableArray<string> GetNonEmptyStringArray(
+        string ruleId,
+        JsonElement rule,
+        string propertyName,
+        ImmutableArray<string> defaultValue,
+        out string? errorMessage)
+    {
+        if (!rule.TryGetProperty(propertyName, out var value))
+        {
+            errorMessage = null;
+            return defaultValue;
+        }
+
+        if (value.ValueKind != JsonValueKind.Array)
+        {
+            errorMessage = $"hawthorne.json.rules.{ruleId}.{propertyName} must be a non-empty array of non-blank strings.";
+            return defaultValue;
+        }
+
+        var values = ImmutableArray.CreateBuilder<string>();
+        foreach (var item in value.EnumerateArray())
+        {
+            if (item.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(item.GetString()))
+            {
+                errorMessage = $"hawthorne.json.rules.{ruleId}.{propertyName} must be a non-empty array of non-blank strings.";
+                return defaultValue;
+            }
+
+            values.Add(item.GetString()!);
+        }
+
+        if (values.Count == 0)
+        {
+            errorMessage = $"hawthorne.json.rules.{ruleId}.{propertyName} must be a non-empty array of non-blank strings.";
+            return defaultValue;
+        }
+
+        errorMessage = null;
+        return values.ToImmutable();
     }
 
     private static int GetPositiveInteger(string ruleId, JsonElement rule, string propertyName, int defaultValue, out string? errorMessage)

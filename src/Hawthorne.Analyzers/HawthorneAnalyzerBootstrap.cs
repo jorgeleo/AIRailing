@@ -37,6 +37,9 @@ public sealed class HawthorneAnalyzerBootstrap : DiagnosticAnalyzer
             HAW102CognitiveComplexityAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW004SingletonAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW002TrivialFactoryAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
+            HAW005NeedlessWrapperAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
+            HAW007ConstructorDependencyAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
+            HAW008BooleanParameterControlFlowAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW003PassThroughAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW104CouplingAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW001SingleImplementationAnalyzer.Register(compilationStartContext, hawthorneConfiguration);

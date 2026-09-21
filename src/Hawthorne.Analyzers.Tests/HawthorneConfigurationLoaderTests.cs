@@ -22,6 +22,19 @@ public sealed class HawthorneConfigurationLoaderTests
     }
 
     [Fact]
+    public void Load_WhenConfigurationIsAbsent_UsesSafeDefaultsForTheNextRuleCatalog()
+    {
+        var result = HawthorneConfigurationLoader.Load(ImmutableArray<AdditionalText>.Empty);
+
+        var configuration = Assert.IsType<HawthorneConfiguration>(result.Configuration);
+        Assert.True(configuration.GetRule("HAW005").IsEnabled);
+        Assert.Equal(DiagnosticSeverity.Warning, configuration.GetRule("HAW005").Severity);
+        Assert.False(configuration.GetRule("HAW015").IsEnabled);
+        Assert.False(configuration.GetRule("HAW100").IsEnabled);
+        Assert.Equal(DiagnosticSeverity.Info, configuration.GetRule("HAW100").Severity);
+    }
+
+    [Fact]
     public void Load_WhenSeverityIsConfigured_UsesConfiguredEffectiveSeverity()
     {
         var result = HawthorneConfigurationLoader.Load(ImmutableArray.Create<AdditionalText>(

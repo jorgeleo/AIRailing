@@ -70,7 +70,7 @@
     "HAW106": {
       "_comment": "Reports an opening curly brace or semicolon that is not immediately followed by CRLF.",
       "_potentialFix": "Put a carriage return and line feed (CRLF) immediately after each opening curly brace and semicolon. This rule only reports the issue; it never edits source files automatically.",
-      "enabled": true,
+      "enabled": false,
       "severity": "warning"
     },
     "HAW900": {
