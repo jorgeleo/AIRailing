@@ -144,6 +144,49 @@
       "treatNoneAsMissingForwarding": true,
       "ignoreContractMethods": true
     },
+    "HAW020": {
+      "_comment": "Opt-in EF Core repository pass-through heuristic.",
+      "enabled": false,
+      "minimumForwardingMethods": 3,
+      "minimumForwardingRatio": 0.8,
+      "repositorySuffixes": ["Repository", "Store", "Dao"],
+      "requireRepositorySuffix": true
+    },
+    "HAW023": {
+      "_comment": "Opt-in private dead extension-point heuristic.",
+      "enabled": false,
+      "includePrivateMembers": true,
+      "includeExternallyAccessibleMembers": false,
+      "analyzeEvents": true,
+      "analyzeCallbacks": true,
+      "analyzeVirtualHooks": true
+    },
+    "HAW025": {
+      "_comment": "Opt-in unchanged configuration-flow chain heuristic.",
+      "enabled": false,
+      "minimumForwardingHops": 2,
+      "configurationTypeSuffixes": ["Options", "Settings", "Configuration"]
+    },
+    "HAW029": {
+      "_comment": "Opt-in lifecycle logging noise heuristic.",
+      "enabled": false,
+      "minimumMethodCount": 5,
+      "maximumLifecycleLogRatio": 0.8,
+      "lifecycleTerms": ["enter", "exit", "success", "start", "finish"],
+      "loggerTypeNames": ["ILogger", "ILogger<"]
+    },
+    "HAW030": {
+      "_comment": "Opt-in structural near-duplicate cluster heuristic.",
+      "enabled": false,
+      "minimumMethods": 3,
+      "minimumStatements": 3,
+      "minimumSimilarity": 0.9
+    },
+    "HAW100": {
+      "_comment": "Opt-in informational abstraction density metric.",
+      "enabled": false,
+      "minimumBehavioralTypes": 1
+    },
     "HAW101": {
       "_comment": "Reports methods whose cyclomatic complexity exceeds maximum.",
       "_potentialFix": "Split the method into focused methods, extract branch-specific strategies, use guard clauses, simplify conditionals, or replace repetitive branching with a data-driven lookup. Reduce the number of independent paths rather than suppressing the diagnostic.",

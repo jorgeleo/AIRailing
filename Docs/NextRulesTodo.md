@@ -7,17 +7,17 @@ without the evidence stated in the plan.
 
 ## Current status
 
-- Current phase: Wave 1 implementation in progress.
+- Current phase: Wave 3 implementation complete; calibration and release gates remain.
 - Last completed item: HAW005, HAW006, HAW007, HAW008, HAW010, HAW011,
-  HAW013, HAW014, HAW015, HAW016, HAW017, HAW018, HAW021, and HAW024
-  implementation, focused tests, rule documentation, full test suite, and
-  solution build.
-- Next action: calibrate the completed Wave 2 rules against the repository set,
-  then begin Wave 3 HAW020.
+  HAW013, HAW014, HAW015, HAW016, HAW017, HAW018, HAW020, HAW021, HAW023,
+  HAW024, HAW025, HAW029, HAW030, and HAW100 implementation, focused tests,
+  rule documentation, and integration wiring.
+- Next action: run repository calibration for Wave 2 and Wave 3 heuristics,
+  record false-positive decisions, then run the release validation gates.
 - The HAW017 LINQ test setup exposed and fixed an HAW104 error-symbol
   recursion in `CouplingInventory`.
-- Blockers: none identified. The five title-only candidates have conservative
-  contracts in the plan and require calibration before default enablement.
+- Blockers: none identified. The opt-in heuristic rules have conservative
+  contracts in the plan and require calibration before any default enablement.
 
 ## Foundation and regression protection
 
@@ -80,17 +80,17 @@ without the evidence stated in the plan.
 
 ## Wave 3 — opt-in architectural heuristics and health metric
 
-- [ ] HAW020: implement EF Core symbol-based repository pass-through ratio;
+- [x] HAW020: implement EF Core symbol-based repository pass-through ratio;
   test meaningful ORM behavior and intentional opt-in configuration.
-- [ ] HAW023: implement private dead event/callback/hook evidence; test source
+- [x] HAW023: implement private dead event/callback/hook evidence; test source
   subscriptions/derivations and externally accessible exclusions.
-- [ ] HAW025: implement typed configuration-flow chain indexing; test reads,
+- [x] HAW025: implement typed configuration-flow chain indexing; test reads,
   transformations, chain-length boundary, and related locations.
-- [ ] HAW029: implement logger-symbol lifecycle-noise ratio; test error/audit
+- [x] HAW029: implement logger-symbol lifecycle-noise ratio; test error/audit
   exclusions, compile-time templates, and default-disabled configuration.
-- [ ] HAW030: implement deterministic operation-shape fingerprint clustering;
+- [x] HAW030: implement deterministic operation-shape fingerprint clustering;
   test cluster/similarity/statement boundaries and stable related locations.
-- [ ] HAW100: implement abstraction/behavior inventory and informational
+- [x] HAW100: implement abstraction/behavior inventory and informational
   diagnostic properties; test zero denominator, configured threshold, and
   culture-invariant density.
 - [ ] Calibrate each opt-in rule and decide, with recorded evidence, whether it

@@ -16,7 +16,8 @@ after opening braces and semicolons. It only produces warnings/diagnostics; it
 does not modify source files automatically.
 
 The implemented next-rule options are documented on each page in
-`Docs/rules/`: architecture rules HAW005–HAW015, reliability rules HAW016–
-HAW018 and HAW021, and cancellation plumbing HAW024. HAW015, like the other
-candidate heuristics marked opt-in in the sample, should remain disabled until
-the project has reviewed its source-versus-reflection boundary.
+`Docs/rules/`: architecture rules HAW005–HAW015, HAW020, HAW023, HAW025,
+HAW029, and HAW030; reliability rules HAW016–HAW018 and HAW021; cancellation
+plumbing HAW024; and the informational HAW100 abstraction-density metric.
+HAW015 and all Wave 3 heuristics remain opt-in until the project has reviewed
+their source-versus-external-consumer boundary.

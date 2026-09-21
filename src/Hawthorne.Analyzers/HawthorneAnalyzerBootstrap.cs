@@ -51,6 +51,12 @@ public sealed class HawthorneAnalyzerBootstrap : DiagnosticAnalyzer
             HAW018RepeatedEnumerationAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW021ExcessiveTryCatchAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW024CancellationTokenAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
+            HAW020RepositoryLayerAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
+            HAW023DeadExtensionPointAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
+            HAW025ConfigurationFlowAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
+            HAW029LoggingNoiseAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
+            HAW030CopyPasteAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
+            HAW100AbstractionDensityAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW003PassThroughAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW104CouplingAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW001SingleImplementationAnalyzer.Register(compilationStartContext, hawthorneConfiguration);

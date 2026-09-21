@@ -6,10 +6,10 @@ the status section before stopping work.
 
 ## Current status
 
-- Current phase: next-rule catalog Wave 1 implementation in progress
-- Last completed item: HAW005, HAW006, HAW007, HAW008, HAW010, HAW011, HAW013, HAW014, HAW015, HAW016, HAW017, HAW018, HAW021, and HAW024 implementation with full test/build verification
-- Next item: calibrate the completed Wave 2 rules, then begin Wave 3 HAW020
-- Progress checkpoint: HAW017's LINQ test setup exposed and fixed an HAW104 error-symbol recursion; Wave 2 implementation is complete.
+- Current phase: next-rule catalog Wave 3 implementation complete; calibration and release gates remain
+- Last completed item: HAW020, HAW023, HAW025, HAW029, HAW030, and HAW100 implementation with focused tests, docs, and bootstrap/configuration integration
+- Next item: calibrate Wave 2 and Wave 3 heuristics against the approved repository set, then complete release validation
+- Progress checkpoint: all six Wave 3 rules are opt-in and have focused tests; HAW100 reports invariant metric properties and Wave 3 compilation-end rules preserve related locations.
 - Blockers: none
 
 The detailed, resumable checklist for the post-v1 catalog is

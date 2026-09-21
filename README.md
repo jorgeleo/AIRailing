@@ -56,6 +56,12 @@ The .NET SDK resolves GitHub Packages with your `GITHUB_TOKEN` automatically.
 | HAW018 | Repeated enumeration of an enumerable source | 2 consumers |
 | HAW021 | Silent default-return catches and dense try/catch types | 5 methods / 0.75 |
 | HAW024 | Cancellation tokens that are not used or forwarded | warning |
+| HAW020 | EF Core repository methods that mostly mirror ORM operations | opt-in |
+| HAW023 | Private events, callbacks, or hooks with no source consumer | opt-in |
+| HAW025 | Configuration/options forwarded unchanged across source boundaries | opt-in |
+| HAW029 | Lifecycle logging repeated across most methods in a type | opt-in |
+| HAW030 | Clusters of structurally near-duplicate methods | opt-in |
+| HAW100 | Abstraction-to-behavior health density metric | opt-in info |
 | HAW101 | Cyclomatic complexity | 10 |
 | HAW102 | Cognitive complexity | 15 |
 | HAW103 | Control-flow nesting depth | 4 |
@@ -109,6 +115,12 @@ A complete example:
     "HAW018": { "minimumEnumerations": 2 },
     "HAW021": { "minimumMethodCount": 5, "maximumTryBlocksPerMethod": 0.75 },
     "HAW024": { "reportMissingForwarding": true, "treatNoneAsMissingForwarding": true },
+    "HAW020": { "enabled": false, "minimumForwardingMethods": 3, "minimumForwardingRatio": 0.80 },
+    "HAW023": { "enabled": false, "includePrivateMembers": true },
+    "HAW025": { "enabled": false, "minimumForwardingHops": 2 },
+    "HAW029": { "enabled": false, "minimumMethodCount": 5, "maximumLifecycleLogRatio": 0.80 },
+    "HAW030": { "enabled": false, "minimumMethods": 3, "minimumStatements": 3, "minimumSimilarity": 0.90 },
+    "HAW100": { "enabled": false, "minimumBehavioralTypes": 1 },
     "HAW101": { "maximum": 12 },
     "HAW102": { "maximum": 20 },
     "HAW103": { "maximum": 3 },

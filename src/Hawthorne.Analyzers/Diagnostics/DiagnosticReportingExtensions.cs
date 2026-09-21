@@ -1,4 +1,5 @@
 using Hawthorne.Analyzers.Configuration;
+using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
@@ -52,6 +53,25 @@ internal static class DiagnosticReportingExtensions
             additionalLocations: null,
             properties: null,
             messageArgs: messageArguments);
+    }
+
+    internal static Diagnostic? CreateHawthorneDiagnosticWithEvidence(
+        DiagnosticDescriptor descriptor,
+        Location location,
+        HawthorneConfiguration configuration,
+        ImmutableArray<Location> additionalLocations,
+        ImmutableDictionary<string, string?>? properties,
+        params object[] messageArguments)
+    {
+        var rule = configuration.GetRule(descriptor.Id);
+        if (!rule.IsEnabled) return null;
+        return Diagnostic.Create(
+            descriptor,
+            location,
+            rule.IsSeverityConfigured ? rule.Severity : descriptor.DefaultSeverity,
+            additionalLocations,
+            properties,
+            messageArguments);
     }
 
     internal static void ReportHawthorneDiagnostic(

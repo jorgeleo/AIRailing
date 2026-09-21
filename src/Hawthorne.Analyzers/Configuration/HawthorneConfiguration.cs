@@ -51,6 +51,12 @@ internal sealed class HawthorneConfiguration
     internal Hawthorne018Configuration RepeatedEnumeration => NextRules.RepeatedEnumeration;
     internal Hawthorne021Configuration ExcessiveTryCatch => NextRules.ExcessiveTryCatch;
     internal Hawthorne024Configuration CancellationTokens => NextRules.CancellationTokens;
+    internal Hawthorne020Configuration RepositoryLayer => NextRules.RepositoryLayer;
+    internal Hawthorne023Configuration DeadExtensionPoints => NextRules.DeadExtensionPoints;
+    internal Hawthorne025Configuration ConfigurationFlow => NextRules.ConfigurationFlow;
+    internal Hawthorne029Configuration LoggingNoise => NextRules.LoggingNoise;
+    internal Hawthorne030Configuration CopyPaste => NextRules.CopyPaste;
+    internal Hawthorne100Configuration AbstractionDensity => NextRules.AbstractionDensity;
 
     internal HawthorneRuleConfiguration GetRule(string diagnosticId) => Rules[diagnosticId];
 
@@ -97,6 +103,18 @@ internal sealed class HawthorneConfiguration
         new(Rules, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity, RequireMutableSingletonState, MaximumClassCoupling, NextRules.WithExcessiveTryCatch(value));
     internal HawthorneConfiguration WithCancellationTokens(Hawthorne024Configuration value) =>
         new(Rules, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity, RequireMutableSingletonState, MaximumClassCoupling, NextRules.WithCancellationTokens(value));
+    internal HawthorneConfiguration WithRepositoryLayer(Hawthorne020Configuration value) =>
+        new(Rules, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity, RequireMutableSingletonState, MaximumClassCoupling, NextRules.WithRepositoryLayer(value));
+    internal HawthorneConfiguration WithDeadExtensionPoints(Hawthorne023Configuration value) =>
+        new(Rules, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity, RequireMutableSingletonState, MaximumClassCoupling, NextRules.WithDeadExtensionPoints(value));
+    internal HawthorneConfiguration WithConfigurationFlow(Hawthorne025Configuration value) =>
+        new(Rules, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity, RequireMutableSingletonState, MaximumClassCoupling, NextRules.WithConfigurationFlow(value));
+    internal HawthorneConfiguration WithLoggingNoise(Hawthorne029Configuration value) =>
+        new(Rules, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity, RequireMutableSingletonState, MaximumClassCoupling, NextRules.WithLoggingNoise(value));
+    internal HawthorneConfiguration WithCopyPaste(Hawthorne030Configuration value) =>
+        new(Rules, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity, RequireMutableSingletonState, MaximumClassCoupling, NextRules.WithCopyPaste(value));
+    internal HawthorneConfiguration WithAbstractionDensity(Hawthorne100Configuration value) =>
+        new(Rules, MethodLength, MaximumNestingDepth, MaximumCyclomaticComplexity, MaximumCognitiveComplexity, RequireMutableSingletonState, MaximumClassCoupling, NextRules.WithAbstractionDensity(value));
 
     internal static HawthorneConfiguration CreateDefaults(IEnumerable<string> diagnosticIds) =>
         new(diagnosticIds.ToImmutableDictionary(
@@ -129,7 +147,8 @@ internal sealed class HawthorneNextRuleConfiguration
         Hawthorne021Configuration.Default,
         Hawthorne024Configuration.Default,
         Hawthorne018Configuration.Default,
-        Hawthorne015Configuration.Default);
+        Hawthorne015Configuration.Default,
+        HawthorneWave3Configuration.Default);
 
     internal HawthorneNextRuleConfiguration(
         Hawthorne005Configuration wrapper,
@@ -145,7 +164,8 @@ internal sealed class HawthorneNextRuleConfiguration
         Hawthorne021Configuration excessiveTryCatch,
         Hawthorne024Configuration cancellationTokens,
         Hawthorne018Configuration? repeatedEnumeration = null,
-        Hawthorne015Configuration? deadConfiguration = null)
+        Hawthorne015Configuration? deadConfiguration = null,
+        HawthorneWave3Configuration? wave3 = null)
     {
         Wrapper = wrapper;
         PrematureGeneralization = prematureGeneralization;
@@ -161,6 +181,7 @@ internal sealed class HawthorneNextRuleConfiguration
         RepeatedEnumeration = repeatedEnumeration ?? Hawthorne018Configuration.Default;
         ExcessiveTryCatch = excessiveTryCatch;
         CancellationTokens = cancellationTokens;
+        Wave3 = wave3 ?? HawthorneWave3Configuration.Default;
     }
 
     internal Hawthorne005Configuration Wrapper { get; }
@@ -177,48 +198,104 @@ internal sealed class HawthorneNextRuleConfiguration
     internal Hawthorne018Configuration RepeatedEnumeration { get; }
     internal Hawthorne021Configuration ExcessiveTryCatch { get; }
     internal Hawthorne024Configuration CancellationTokens { get; }
+    internal HawthorneWave3Configuration Wave3 { get; }
+    internal Hawthorne020Configuration RepositoryLayer => Wave3.RepositoryLayer;
+    internal Hawthorne023Configuration DeadExtensionPoints => Wave3.DeadExtensionPoints;
+    internal Hawthorne025Configuration ConfigurationFlow => Wave3.ConfigurationFlow;
+    internal Hawthorne029Configuration LoggingNoise => Wave3.LoggingNoise;
+    internal Hawthorne030Configuration CopyPaste => Wave3.CopyPaste;
+    internal Hawthorne100Configuration AbstractionDensity => Wave3.AbstractionDensity;
 
     internal HawthorneNextRuleConfiguration WithWrapper(Hawthorne005Configuration value) =>
-        new(value, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens);
+        new(value, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens, RepeatedEnumeration, DeadConfiguration, Wave3);
 
     internal HawthorneNextRuleConfiguration WithPrematureGeneralization(Hawthorne006Configuration value) =>
-        new(Wrapper, value, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens);
+        new(Wrapper, value, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens, RepeatedEnumeration, DeadConfiguration, Wave3);
 
     internal HawthorneNextRuleConfiguration WithConstructorDependencies(Hawthorne007Configuration value) =>
-        new(Wrapper, PrematureGeneralization, value, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens);
+        new(Wrapper, PrematureGeneralization, value, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens, RepeatedEnumeration, DeadConfiguration, Wave3);
 
     internal HawthorneNextRuleConfiguration WithBooleanControlFlow(Hawthorne008Configuration value) =>
-        new(Wrapper, PrematureGeneralization, ConstructorDependencies, value, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens);
+        new(Wrapper, PrematureGeneralization, ConstructorDependencies, value, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens, RepeatedEnumeration, DeadConfiguration, Wave3);
 
     internal HawthorneNextRuleConfiguration WithOneMethodServices(Hawthorne010Configuration value) =>
-        new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, value, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens);
+        new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, value, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens, RepeatedEnumeration, DeadConfiguration, Wave3);
 
     internal HawthorneNextRuleConfiguration WithExcessiveMicroMethods(Hawthorne011Configuration value) =>
-        new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, value, ExceptionLaundering, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens);
+        new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, value, ExceptionLaundering, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens, RepeatedEnumeration, DeadConfiguration, Wave3);
 
     internal HawthorneNextRuleConfiguration WithExceptionLaundering(Hawthorne013Configuration value) =>
-        new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, value, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens);
+        new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, value, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens, RepeatedEnumeration, DeadConfiguration, Wave3);
 
     internal HawthorneNextRuleConfiguration WithDefensiveNullChecking(Hawthorne014Configuration value) =>
-        new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, value, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens, RepeatedEnumeration);
+        new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, value, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens, RepeatedEnumeration, DeadConfiguration, Wave3);
 
     internal HawthorneNextRuleConfiguration WithDeadConfiguration(Hawthorne015Configuration value) =>
-        new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens, RepeatedEnumeration, value);
+        new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens, RepeatedEnumeration, value, Wave3);
 
     internal HawthorneNextRuleConfiguration WithFakeAsync(Hawthorne016Configuration value) =>
-        new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, value, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens);
+        new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, value, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens, RepeatedEnumeration, DeadConfiguration, Wave3);
 
     internal HawthorneNextRuleConfiguration WithUnnecessaryLinqMaterialization(Hawthorne017Configuration value) =>
-        new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, FakeAsync, value, ExcessiveTryCatch, CancellationTokens);
+        new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, FakeAsync, value, ExcessiveTryCatch, CancellationTokens, RepeatedEnumeration, DeadConfiguration, Wave3);
 
     internal HawthorneNextRuleConfiguration WithRepeatedEnumeration(Hawthorne018Configuration value) =>
-        new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens, value);
+        new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens, value, DeadConfiguration, Wave3);
 
     internal HawthorneNextRuleConfiguration WithExcessiveTryCatch(Hawthorne021Configuration value) =>
-        new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, value, CancellationTokens);
+        new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, value, CancellationTokens, RepeatedEnumeration, DeadConfiguration, Wave3);
 
     internal HawthorneNextRuleConfiguration WithCancellationTokens(Hawthorne024Configuration value) =>
-        new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, value);
+        new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, value, RepeatedEnumeration, DeadConfiguration, Wave3);
+
+    internal HawthorneNextRuleConfiguration WithRepositoryLayer(Hawthorne020Configuration value) => WithWave3(Wave3.WithRepositoryLayer(value));
+    internal HawthorneNextRuleConfiguration WithDeadExtensionPoints(Hawthorne023Configuration value) => WithWave3(Wave3.WithDeadExtensionPoints(value));
+    internal HawthorneNextRuleConfiguration WithConfigurationFlow(Hawthorne025Configuration value) => WithWave3(Wave3.WithConfigurationFlow(value));
+    internal HawthorneNextRuleConfiguration WithLoggingNoise(Hawthorne029Configuration value) => WithWave3(Wave3.WithLoggingNoise(value));
+    internal HawthorneNextRuleConfiguration WithCopyPaste(Hawthorne030Configuration value) => WithWave3(Wave3.WithCopyPaste(value));
+    internal HawthorneNextRuleConfiguration WithAbstractionDensity(Hawthorne100Configuration value) => WithWave3(Wave3.WithAbstractionDensity(value));
+    private HawthorneNextRuleConfiguration WithWave3(HawthorneWave3Configuration value) => new(Wrapper, PrematureGeneralization, ConstructorDependencies, BooleanControlFlow, OneMethodServices, ExcessiveMicroMethods, ExceptionLaundering, DefensiveNullChecking, FakeAsync, UnnecessaryLinqMaterialization, ExcessiveTryCatch, CancellationTokens, RepeatedEnumeration, DeadConfiguration, value);
+}
+
+internal sealed class HawthorneWave3Configuration
+{
+    internal static HawthorneWave3Configuration Default { get; } = new(
+        Hawthorne020Configuration.Default,
+        Hawthorne023Configuration.Default,
+        Hawthorne025Configuration.Default,
+        Hawthorne029Configuration.Default,
+        Hawthorne030Configuration.Default,
+        Hawthorne100Configuration.Default);
+
+    internal HawthorneWave3Configuration(
+        Hawthorne020Configuration repositoryLayer,
+        Hawthorne023Configuration deadExtensionPoints,
+        Hawthorne025Configuration configurationFlow,
+        Hawthorne029Configuration loggingNoise,
+        Hawthorne030Configuration copyPaste,
+        Hawthorne100Configuration abstractionDensity)
+    {
+        RepositoryLayer = repositoryLayer;
+        DeadExtensionPoints = deadExtensionPoints;
+        ConfigurationFlow = configurationFlow;
+        LoggingNoise = loggingNoise;
+        CopyPaste = copyPaste;
+        AbstractionDensity = abstractionDensity;
+    }
+
+    internal Hawthorne020Configuration RepositoryLayer { get; }
+    internal Hawthorne023Configuration DeadExtensionPoints { get; }
+    internal Hawthorne025Configuration ConfigurationFlow { get; }
+    internal Hawthorne029Configuration LoggingNoise { get; }
+    internal Hawthorne030Configuration CopyPaste { get; }
+    internal Hawthorne100Configuration AbstractionDensity { get; }
+
+    internal HawthorneWave3Configuration WithRepositoryLayer(Hawthorne020Configuration value) => new(value, DeadExtensionPoints, ConfigurationFlow, LoggingNoise, CopyPaste, AbstractionDensity);
+    internal HawthorneWave3Configuration WithDeadExtensionPoints(Hawthorne023Configuration value) => new(RepositoryLayer, value, ConfigurationFlow, LoggingNoise, CopyPaste, AbstractionDensity);
+    internal HawthorneWave3Configuration WithConfigurationFlow(Hawthorne025Configuration value) => new(RepositoryLayer, DeadExtensionPoints, value, LoggingNoise, CopyPaste, AbstractionDensity);
+    internal HawthorneWave3Configuration WithLoggingNoise(Hawthorne029Configuration value) => new(RepositoryLayer, DeadExtensionPoints, ConfigurationFlow, value, CopyPaste, AbstractionDensity);
+    internal HawthorneWave3Configuration WithCopyPaste(Hawthorne030Configuration value) => new(RepositoryLayer, DeadExtensionPoints, ConfigurationFlow, LoggingNoise, value, AbstractionDensity);
+    internal HawthorneWave3Configuration WithAbstractionDensity(Hawthorne100Configuration value) => new(RepositoryLayer, DeadExtensionPoints, ConfigurationFlow, LoggingNoise, CopyPaste, value);
 }
 
 internal sealed class Hawthorne005Configuration
@@ -503,6 +580,114 @@ internal sealed class Hawthorne024Configuration
     internal bool ReportMissingForwarding { get; }
     internal bool TreatNoneAsMissingForwarding { get; }
     internal bool IgnoreContractMethods { get; }
+}
+
+internal sealed class Hawthorne020Configuration
+{
+    internal static Hawthorne020Configuration Default { get; } = new(
+        minimumForwardingMethods: 3,
+        minimumForwardingRatio: 0.80,
+        repositorySuffixes: ImmutableArray.Create("Repository", "Store", "Dao"),
+        requireRepositorySuffix: true);
+
+    internal Hawthorne020Configuration(int minimumForwardingMethods, double minimumForwardingRatio, ImmutableArray<string> repositorySuffixes, bool requireRepositorySuffix)
+    {
+        MinimumForwardingMethods = minimumForwardingMethods;
+        MinimumForwardingRatio = minimumForwardingRatio;
+        RepositorySuffixes = repositorySuffixes;
+        RequireRepositorySuffix = requireRepositorySuffix;
+    }
+
+    internal int MinimumForwardingMethods { get; }
+    internal double MinimumForwardingRatio { get; }
+    internal ImmutableArray<string> RepositorySuffixes { get; }
+    internal bool RequireRepositorySuffix { get; }
+    internal bool HasRepositorySuffix(string name) => RepositorySuffixes.Any(suffix => name.EndsWith(suffix, StringComparison.Ordinal));
+}
+
+internal sealed class Hawthorne023Configuration
+{
+    internal static Hawthorne023Configuration Default { get; } = new(true, false, true, true, true);
+
+    internal Hawthorne023Configuration(bool includePrivateMembers, bool includeExternallyAccessibleMembers, bool analyzeEvents, bool analyzeCallbacks, bool analyzeVirtualHooks)
+    {
+        IncludePrivateMembers = includePrivateMembers;
+        IncludeExternallyAccessibleMembers = includeExternallyAccessibleMembers;
+        AnalyzeEvents = analyzeEvents;
+        AnalyzeCallbacks = analyzeCallbacks;
+        AnalyzeVirtualHooks = analyzeVirtualHooks;
+    }
+
+    internal bool IncludePrivateMembers { get; }
+    internal bool IncludeExternallyAccessibleMembers { get; }
+    internal bool AnalyzeEvents { get; }
+    internal bool AnalyzeCallbacks { get; }
+    internal bool AnalyzeVirtualHooks { get; }
+}
+
+internal sealed class Hawthorne025Configuration
+{
+    internal static Hawthorne025Configuration Default { get; } = new(2, ImmutableArray.Create("Options", "Settings", "Configuration"));
+
+    internal Hawthorne025Configuration(int minimumForwardingHops, ImmutableArray<string> configurationTypeSuffixes)
+    {
+        MinimumForwardingHops = minimumForwardingHops;
+        ConfigurationTypeSuffixes = configurationTypeSuffixes;
+    }
+
+    internal int MinimumForwardingHops { get; }
+    internal ImmutableArray<string> ConfigurationTypeSuffixes { get; }
+    internal bool IsConfigurationType(ITypeSymbol type) => ConfigurationTypeSuffixes.Any(suffix => type.Name.EndsWith(suffix, StringComparison.Ordinal));
+}
+
+internal sealed class Hawthorne029Configuration
+{
+    internal static Hawthorne029Configuration Default { get; } = new(5, 0.80, ImmutableArray.Create("enter", "exit", "success", "start", "finish"), ImmutableArray.Create("ILogger", "ILogger<"));
+
+    internal Hawthorne029Configuration(int minimumMethodCount, double maximumLifecycleLogRatio, ImmutableArray<string> lifecycleTerms, ImmutableArray<string> loggerTypeNames)
+    {
+        MinimumMethodCount = minimumMethodCount;
+        MaximumLifecycleLogRatio = maximumLifecycleLogRatio;
+        LifecycleTerms = lifecycleTerms;
+        LoggerTypeNames = loggerTypeNames;
+    }
+
+    internal int MinimumMethodCount { get; }
+    internal double MaximumLifecycleLogRatio { get; }
+    internal ImmutableArray<string> LifecycleTerms { get; }
+    internal ImmutableArray<string> LoggerTypeNames { get; }
+}
+
+internal sealed class Hawthorne030Configuration
+{
+    internal static Hawthorne030Configuration Default { get; } = new(3, 3, 0.90);
+
+    internal Hawthorne030Configuration(int minimumMethods, int minimumStatements, double minimumSimilarity)
+    {
+        MinimumMethods = minimumMethods;
+        MinimumStatements = minimumStatements;
+        MinimumSimilarity = minimumSimilarity;
+    }
+
+    internal int MinimumMethods { get; }
+    internal int MinimumStatements { get; }
+    internal double MinimumSimilarity { get; }
+}
+
+internal sealed class Hawthorne100Configuration
+{
+    internal static Hawthorne100Configuration Default { get; } = new(null, 1, ImmutableArray.Create("Factory", "Adapter", "Facade", "Provider", "Manager", "Service"));
+
+    internal Hawthorne100Configuration(double? maximumDensity, int minimumBehavioralTypes, ImmutableArray<string> abstractionRoleSuffixes)
+    {
+        MaximumDensity = maximumDensity;
+        MinimumBehavioralTypes = minimumBehavioralTypes;
+        AbstractionRoleSuffixes = abstractionRoleSuffixes;
+    }
+
+    internal double? MaximumDensity { get; }
+    internal int MinimumBehavioralTypes { get; }
+    internal ImmutableArray<string> AbstractionRoleSuffixes { get; }
 }
 
 internal sealed class Hawthorne105Configuration

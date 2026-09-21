@@ -292,6 +292,42 @@ internal static class HawthorneConfigurationLoader
 
                     configuration = configuration.WithCancellationTokens(cancellationTokens);
                 }
+                if (rule.Name == "HAW020")
+                {
+                    var repository = GetRepositoryLayer(rule.Name, rule.Value, configuration.RepositoryLayer, out var error);
+                    if (error is not null) return HawthorneConfigurationLoadResult.Invalid(error, configurationFiles[0]);
+                    configuration = configuration.WithRepositoryLayer(repository);
+                }
+                if (rule.Name == "HAW023")
+                {
+                    var extensionPoints = GetDeadExtensionPoints(rule.Name, rule.Value, configuration.DeadExtensionPoints, out var error);
+                    if (error is not null) return HawthorneConfigurationLoadResult.Invalid(error, configurationFiles[0]);
+                    configuration = configuration.WithDeadExtensionPoints(extensionPoints);
+                }
+                if (rule.Name == "HAW025")
+                {
+                    var flow = GetConfigurationFlow(rule.Name, rule.Value, configuration.ConfigurationFlow, out var error);
+                    if (error is not null) return HawthorneConfigurationLoadResult.Invalid(error, configurationFiles[0]);
+                    configuration = configuration.WithConfigurationFlow(flow);
+                }
+                if (rule.Name == "HAW029")
+                {
+                    var logging = GetLoggingNoise(rule.Name, rule.Value, configuration.LoggingNoise, out var error);
+                    if (error is not null) return HawthorneConfigurationLoadResult.Invalid(error, configurationFiles[0]);
+                    configuration = configuration.WithLoggingNoise(logging);
+                }
+                if (rule.Name == "HAW030")
+                {
+                    var copyPaste = GetCopyPaste(rule.Name, rule.Value, configuration.CopyPaste, out var error);
+                    if (error is not null) return HawthorneConfigurationLoadResult.Invalid(error, configurationFiles[0]);
+                    configuration = configuration.WithCopyPaste(copyPaste);
+                }
+                if (rule.Name == "HAW100")
+                {
+                    var density = GetAbstractionDensity(rule.Name, rule.Value, configuration.AbstractionDensity, out var error);
+                    if (error is not null) return HawthorneConfigurationLoadResult.Invalid(error, configurationFiles[0]);
+                    configuration = configuration.WithAbstractionDensity(density);
+                }
                 if (rule.Name == "HAW105")
                 {
                     var methodLength = GetMethodLength(rule.Name, rule.Value, configuration.MethodLength, out var methodLengthError);
@@ -906,6 +942,80 @@ internal static class HawthorneConfigurationLoader
                 treatNoneAsMissingForwarding,
                 ignoreContractMethods)
             : defaults;
+    }
+
+    private static Hawthorne020Configuration GetRepositoryLayer(string ruleId, JsonElement rule, Hawthorne020Configuration defaults, out string? error)
+    {
+        var methods = GetPositiveInteger(ruleId, rule, "minimumForwardingMethods", defaults.MinimumForwardingMethods, out error);
+        if (error is not null) return defaults;
+        var ratio = GetUnitIntervalDouble(ruleId, rule, "minimumForwardingRatio", defaults.MinimumForwardingRatio, out error);
+        if (error is not null) return defaults;
+        var suffixes = GetNonEmptyStringArray(ruleId, rule, "repositorySuffixes", defaults.RepositorySuffixes, out error);
+        if (error is not null) return defaults;
+        var required = GetBoolean(ruleId, rule, "requireRepositorySuffix", defaults.RequireRepositorySuffix, out error);
+        return error is null ? new Hawthorne020Configuration(methods, ratio, suffixes, required) : defaults;
+    }
+
+    private static Hawthorne023Configuration GetDeadExtensionPoints(string ruleId, JsonElement rule, Hawthorne023Configuration defaults, out string? error)
+    {
+        var privateMembers = GetBoolean(ruleId, rule, "includePrivateMembers", defaults.IncludePrivateMembers, out error);
+        if (error is not null) return defaults;
+        var external = GetBoolean(ruleId, rule, "includeExternallyAccessibleMembers", defaults.IncludeExternallyAccessibleMembers, out error);
+        if (error is not null) return defaults;
+        var events = GetBoolean(ruleId, rule, "analyzeEvents", defaults.AnalyzeEvents, out error);
+        if (error is not null) return defaults;
+        var callbacks = GetBoolean(ruleId, rule, "analyzeCallbacks", defaults.AnalyzeCallbacks, out error);
+        if (error is not null) return defaults;
+        var hooks = GetBoolean(ruleId, rule, "analyzeVirtualHooks", defaults.AnalyzeVirtualHooks, out error);
+        return error is null ? new Hawthorne023Configuration(privateMembers, external, events, callbacks, hooks) : defaults;
+    }
+
+    private static Hawthorne025Configuration GetConfigurationFlow(string ruleId, JsonElement rule, Hawthorne025Configuration defaults, out string? error)
+    {
+        var hops = GetPositiveInteger(ruleId, rule, "minimumForwardingHops", defaults.MinimumForwardingHops, out error);
+        if (error is not null) return defaults;
+        var suffixes = GetNonEmptyStringArray(ruleId, rule, "configurationTypeSuffixes", defaults.ConfigurationTypeSuffixes, out error);
+        return error is null ? new Hawthorne025Configuration(hops, suffixes) : defaults;
+    }
+
+    private static Hawthorne029Configuration GetLoggingNoise(string ruleId, JsonElement rule, Hawthorne029Configuration defaults, out string? error)
+    {
+        var methods = GetPositiveInteger(ruleId, rule, "minimumMethodCount", defaults.MinimumMethodCount, out error);
+        if (error is not null) return defaults;
+        var ratio = GetUnitIntervalDouble(ruleId, rule, "maximumLifecycleLogRatio", defaults.MaximumLifecycleLogRatio, out error);
+        if (error is not null) return defaults;
+        var terms = GetNonEmptyStringArray(ruleId, rule, "lifecycleTerms", defaults.LifecycleTerms, out error);
+        if (error is not null) return defaults;
+        var loggerNames = GetNonEmptyStringArray(ruleId, rule, "loggerTypeNames", defaults.LoggerTypeNames, out error);
+        return error is null ? new Hawthorne029Configuration(methods, ratio, terms, loggerNames) : defaults;
+    }
+
+    private static Hawthorne030Configuration GetCopyPaste(string ruleId, JsonElement rule, Hawthorne030Configuration defaults, out string? error)
+    {
+        var methods = GetPositiveInteger(ruleId, rule, "minimumMethods", defaults.MinimumMethods, out error);
+        if (error is not null) return defaults;
+        var statements = GetPositiveInteger(ruleId, rule, "minimumStatements", defaults.MinimumStatements, out error);
+        if (error is not null) return defaults;
+        var similarity = GetUnitIntervalDouble(ruleId, rule, "minimumSimilarity", defaults.MinimumSimilarity, out error);
+        return error is null ? new Hawthorne030Configuration(methods, statements, similarity) : defaults;
+    }
+
+    private static Hawthorne100Configuration GetAbstractionDensity(string ruleId, JsonElement rule, Hawthorne100Configuration defaults, out string? error)
+    {
+        double? maximum = defaults.MaximumDensity;
+        if (rule.TryGetProperty("maximumDensity", out var value))
+        {
+            if (value.ValueKind != JsonValueKind.Number || !value.TryGetDouble(out var parsed) || parsed <= 0)
+            {
+                error = $"hawthorne.json.rules.{ruleId}.maximumDensity must be a number greater than zero.";
+                return defaults;
+            }
+            maximum = parsed;
+        }
+        var minimumBehavioral = GetPositiveInteger(ruleId, rule, "minimumBehavioralTypes", defaults.MinimumBehavioralTypes, out error);
+        if (error is not null) return defaults;
+        var suffixes = GetNonEmptyStringArray(ruleId, rule, "abstractionRoleSuffixes", defaults.AbstractionRoleSuffixes, out error);
+        return error is null ? new Hawthorne100Configuration(maximum, minimumBehavioral, suffixes) : defaults;
     }
 
     private static bool GetBoolean(
