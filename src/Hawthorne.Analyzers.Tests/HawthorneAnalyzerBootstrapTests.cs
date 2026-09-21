@@ -499,6 +499,26 @@ public sealed class HawthorneAnalyzerBootstrapTests
     }
 
     [Fact]
+    public async Task Analyze_WhenTransparentGenericWrapperIsNormalized_DoesNotRecurse()
+    {
+        var compilation = CSharpCompilation.Create("TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText("class Customer { } class Host { private System.Collections.Generic.List<Customer> value; }") },
+            new[]
+            {
+                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(System.Collections.Generic.List<>).Assembly.Location),
+            });
+        var options = new CompilationWithAnalyzersOptions(new AnalyzerOptions(ImmutableArray.Create<AdditionalText>(
+            new TestAdditionalText("/project/hawthorne.json", "{ \"version\": 1, \"rules\": { \"HAW104\": { \"maximum\": 1 } } }"))), null, true, false, false);
+
+        var diagnostics = await compilation
+            .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), options)
+            .GetAnalyzerDiagnosticsAsync();
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
     public async Task Analyze_WhenNestedTypeUsesDependency_DoesNotCountItForTheEnclosingType()
     {
         var compilation = CSharpCompilation.Create("TestAssembly",
