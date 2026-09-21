@@ -7,6 +7,7 @@ internal static class HawthorneDiagnosticDescriptors
 {
     private const string ArchitectureCategory = "Hawthorne.Architecture";
     private const string ComplexityCategory = "Hawthorne.Complexity";
+    private const string FormattingCategory = "Hawthorne.Formatting";
     private const string ConfigurationCategory = "Hawthorne.Configuration";
 
     internal static readonly DiagnosticDescriptor HAW001 = CreateArchitectureWarning(
@@ -54,6 +55,15 @@ internal static class HawthorneDiagnosticDescriptors
         "Method length",
         "Method length exceeds the configured limit: {0}. Split the method into focused operations.");
 
+    internal static readonly DiagnosticDescriptor HAW106 = new(
+        "HAW106",
+        "Missing CRLF after syntax token",
+        "Insert a CRLF after '{0}'",
+        FormattingCategory,
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Opening braces and semicolons must be followed immediately by a carriage return and line feed.");
+
     internal static readonly DiagnosticDescriptor HAW900 = new(
         "HAW900",
         "Invalid Hawthorne configuration",
@@ -74,7 +84,7 @@ internal static class HawthorneDiagnosticDescriptors
         description: "Hawthorne diagnostics may be suppressed only with a non-empty justification.");
 
     internal static ImmutableArray<DiagnosticDescriptor> All { get; } = ImmutableArray.Create(
-        HAW001, HAW002, HAW003, HAW004, HAW101, HAW102, HAW103, HAW104, HAW105, HAW900, HAW901);
+        HAW001, HAW002, HAW003, HAW004, HAW101, HAW102, HAW103, HAW104, HAW105, HAW106, HAW900, HAW901);
 
     private static DiagnosticDescriptor CreateArchitectureWarning(string id, string title, string messageFormat) =>
         new(id, title, messageFormat, ArchitectureCategory, DiagnosticSeverity.Warning, isEnabledByDefault: true);

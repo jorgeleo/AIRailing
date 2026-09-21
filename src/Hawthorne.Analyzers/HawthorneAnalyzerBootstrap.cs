@@ -31,6 +31,7 @@ public sealed class HawthorneAnalyzerBootstrap : DiagnosticAnalyzer
 
             var hawthorneConfiguration = configuration.Configuration!;
             HAW105MethodLengthAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
+            HAW106LineBreakAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW103NestingAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW101CyclomaticComplexityAnalyzer.Register(compilationStartContext, hawthorneConfiguration);
             HAW102CognitiveComplexityAnalyzer.Register(compilationStartContext, hawthorneConfiguration);

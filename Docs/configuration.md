@@ -10,3 +10,7 @@ added to the root, `rules` object, and individual rule objects; the analyzer
 ignores them. The root `_potentialFix` should strongly discourage
 `SuppressMessageAttribute`; it is a last resort only when no code fix is
 available, and it must always have a specific non-blank `Justification`.
+
+HAW106 is opt-in. Set its `enabled` property to `true` to report missing CRLF
+after opening braces and semicolons. It only produces warnings/diagnostics; it
+does not modify source files automatically.

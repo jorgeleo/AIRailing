@@ -38,7 +38,7 @@ public sealed class HawthorneAnalyzerBootstrapTests
         Assert.Equal(
             new[]
             {
-                "HAW001", "HAW002", "HAW003", "HAW004", "HAW101", "HAW102", "HAW103", "HAW104", "HAW105", "HAW900", "HAW901",
+                "HAW001", "HAW002", "HAW003", "HAW004", "HAW101", "HAW102", "HAW103", "HAW104", "HAW105", "HAW106", "HAW900", "HAW901",
             },
             supportedIds);
     }
@@ -120,6 +120,53 @@ public sealed class HawthorneAnalyzerBootstrapTests
             .GetAnalyzerDiagnosticsAsync();
 
         Assert.Equal("HAW105", Assert.Single(diagnostics).Id);
+    }
+
+    [Fact]
+    public async Task Analyze_WhenLineBreakRuleIsEnabled_ReportsMissingCrLfAfterOpeningBracesAndSemicolons()
+    {
+        var compilation = CSharpCompilation.Create(
+            "TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText("class Example { void Run() { return; } }") },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var options = new CompilationWithAnalyzersOptions(
+            new AnalyzerOptions(ImmutableArray.Create<AdditionalText>(new TestAdditionalText(
+                "/project/hawthorne.json",
+                "{ \"version\": 1, \"rules\": { \"HAW106\": { \"enabled\": true } } }"))),
+            null,
+            true,
+            false,
+            false);
+
+        var diagnostics = await compilation
+            .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), options)
+            .GetAnalyzerDiagnosticsAsync();
+
+        Assert.Equal(3, diagnostics.Count(diagnostic => diagnostic.Id == "HAW106"));
+    }
+
+    [Fact]
+    public async Task Analyze_WhenLineBreakRuleIsEnabled_DoesNotReportExistingCrLf()
+    {
+        var source = "class Example {\r\n    void Run()\r\n    {\r\n        return;\r\n    }\r\n}";
+        var compilation = CSharpCompilation.Create(
+            "TestAssembly",
+            new[] { CSharpSyntaxTree.ParseText(source) },
+            new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var options = new CompilationWithAnalyzersOptions(
+            new AnalyzerOptions(ImmutableArray.Create<AdditionalText>(new TestAdditionalText(
+                "/project/hawthorne.json",
+                "{ \"version\": 1, \"rules\": { \"HAW106\": { \"enabled\": true } } }"))),
+            null,
+            true,
+            false,
+            false);
+
+        var diagnostics = await compilation
+            .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), options)
+            .GetAnalyzerDiagnosticsAsync();
+
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Id == "HAW106");
     }
 
     [Fact]

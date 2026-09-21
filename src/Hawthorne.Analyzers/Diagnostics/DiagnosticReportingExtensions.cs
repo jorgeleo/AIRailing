@@ -40,4 +40,18 @@ internal static class DiagnosticReportingExtensions
             properties: null,
             messageArgs: messageArguments);
     }
+
+    internal static void ReportHawthorneDiagnostic(
+        this SyntaxTreeAnalysisContext context,
+        DiagnosticDescriptor descriptor,
+        Location location,
+        HawthorneConfiguration configuration,
+        params object[] messageArguments)
+    {
+        var diagnostic = CreateHawthorneDiagnostic(descriptor, location, configuration, messageArguments);
+        if (diagnostic is not null)
+        {
+            context.ReportDiagnostic(diagnostic);
+        }
+    }
 }

@@ -54,7 +54,9 @@ internal sealed class HawthorneConfiguration
     internal static HawthorneConfiguration CreateDefaults(IEnumerable<string> diagnosticIds) =>
         new(diagnosticIds.ToImmutableDictionary(
             diagnosticId => diagnosticId,
-            _ => HawthorneRuleConfiguration.Default,
+            diagnosticId => diagnosticId == "HAW106"
+                ? HawthorneRuleConfiguration.FormattingDefault
+                : HawthorneRuleConfiguration.Default,
             StringComparer.Ordinal), Hawthorne105Configuration.Default, 4, 10, 15, true, 12);
 }
 
@@ -85,6 +87,8 @@ internal sealed class HawthorneRuleConfiguration
     internal DiagnosticSeverity Severity { get; }
 
     internal static HawthorneRuleConfiguration Default { get; } = new(true, DiagnosticSeverity.Warning);
+
+    internal static HawthorneRuleConfiguration FormattingDefault { get; } = new(false, DiagnosticSeverity.Warning);
 }
 
 internal sealed class HawthorneConfigurationLoadResult

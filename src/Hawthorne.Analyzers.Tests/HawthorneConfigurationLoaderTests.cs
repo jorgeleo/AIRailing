@@ -18,6 +18,7 @@ public sealed class HawthorneConfigurationLoaderTests
         Assert.True(result.IsValid);
         Assert.Equal(DiagnosticSeverity.Warning, result.Configuration!.GetRule("HAW105").Severity);
         Assert.True(result.Configuration.GetRule("HAW105").IsEnabled);
+        Assert.False(result.Configuration.GetRule("HAW106").IsEnabled);
     }
 
     [Fact]

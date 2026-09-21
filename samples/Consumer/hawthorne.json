@@ -67,6 +67,12 @@
       "maximumExecutableStatements": 30,
       "maximumPhysicalLines": 50
     },
+    "HAW106": {
+      "_comment": "Reports an opening curly brace or semicolon that is not immediately followed by CRLF.",
+      "_potentialFix": "Put a carriage return and line feed (CRLF) immediately after each opening curly brace and semicolon. This rule only reports the issue; it never edits source files automatically.",
+      "enabled": true,
+      "severity": "warning"
+    },
     "HAW900": {
       "_comment": "Reports invalid hawthorne.json content as a compiler error. This diagnostic is always an error when configuration is invalid.",
       "_potentialFix": "Correct the JSON syntax and schema: use version 1, valid rule IDs, boolean enabled values, supported severity names, positive numeric thresholds, and no obsolete exceptions property.",
