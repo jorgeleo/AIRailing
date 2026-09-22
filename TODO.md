@@ -6,8 +6,8 @@ the status section before stopping work.
 
 ## Current status
 
-- Current phase: all next-rule catalog implementations enabled by default; suppression-policy hardening is complete
-- Last completed item: HAW901 non-suppressible validation for HAW100–HAW106 plus governance protections for HAW900 and HAW901, with focused regression coverage and documentation
+- Current phase: all next-rule catalog implementations enabled by default; suppression-policy and local release hardening are complete
+- Last completed item: local release helper now commits and tags the release version, publishes the NuGet package, and uploads its `.nupkg` as a GitHub Release asset
 - Next item: repository calibration and IDE checks remain manual; automated build/package gates are complete
 - Progress checkpoint: all next-rule catalog rules are enabled by default; HAW100 reports invariant metric properties, Wave 3 compilation-end rules preserve related locations, and non-suppressible source suppressions report error HAW901 even when HAW901 is disabled in configuration.
 - Blockers: none
@@ -63,6 +63,7 @@ remain the v1 baseline and must stay green while the next catalog is added.
 
 - [ ] Calibrate architecture diagnostics against real repositories.
 - [x] Add NuGet packaging metadata and package validation.
+- [x] Extend the local release helper to create or update a GitHub Release with the generated `.nupkg` asset.
 - [x] Add CI build/test gate.
 - [x] Verify `dotnet build` and packed analyzer package consumption.
 - [ ] Verify Visual Studio and Visual Studio Code consumption.

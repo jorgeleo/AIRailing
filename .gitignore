@@ -48,3 +48,4 @@ scripts/release-local.sh
 .DS_Store
 Thumbs.db
 *.log
+scripts/ghc.txt
