@@ -1,20 +1,20 @@
 <Project>
   <PropertyGroup>
     <HawthorneAutoCreateConfiguration Condition="'$(HawthorneAutoCreateConfiguration)' == ''">true</HawthorneAutoCreateConfiguration>
-    <HawthorneConfigurationPath Condition="'$(HawthorneConfigurationPath)' == ''">$(MSBuildProjectDirectory)\hawthorne.json</HawthorneConfigurationPath>
-    <HawthornePackagedConfigurationPath Condition="'$(HawthornePackagedConfigurationPath)' == ''">$(MSBuildThisFileDirectory)..\contentFiles\any\any\hawthorne.json</HawthornePackagedConfigurationPath>
+    <HawthorneConfigurationPath Condition="'$(HawthorneConfigurationPath)' == ''">$(MSBuildProjectDirectory)/hawthorne.json</HawthorneConfigurationPath>
+    <HawthornePackagedConfigurationPath Condition="'$(HawthornePackagedConfigurationPath)' == ''">$(MSBuildThisFileDirectory)../contentFiles/any/any/hawthorne.json</HawthornePackagedConfigurationPath>
   </PropertyGroup>
 
-  <Target Name="HawthorneCreateDefaultConfiguration"
-          BeforeTargets="CoreCompile"
-          Condition="'$(HawthorneAutoCreateConfiguration)' == 'true' and !Exists('$(HawthorneConfigurationPath)')">
+  <Target Name="HawthornePrepareConfiguration" BeforeTargets="CoreCompile">
     <Copy
+      Condition="'$(HawthorneAutoCreateConfiguration)' == 'true' and !Exists('$(HawthorneConfigurationPath)')"
       SourceFiles="$(HawthornePackagedConfigurationPath)"
       DestinationFiles="$(HawthorneConfigurationPath)"
       SkipUnchangedFiles="true" />
 
-    <ItemGroup>
-      <AdditionalFiles Include="$(HawthorneConfigurationPath)" />
+    <ItemGroup Condition="Exists('$(HawthorneConfigurationPath)')">
+      <AdditionalFiles Include="$(HawthorneConfigurationPath)"
+                       Condition="'@(AdditionalFiles->AnyHaveMetadataValue('FullPath', '$(HawthorneConfigurationPath)'))' != 'true'" />
     </ItemGroup>
   </Target>
 </Project>

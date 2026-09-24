@@ -1,10 +1,12 @@
 # Hawthorne configuration
 
-Add `hawthorne.json` beside the consuming project file and include it as an
-`AdditionalFiles` item. Quality rules default to warnings, HAW100 is
-informational, and HAW900 is an error. Each quality rule accepts `enabled` and
-`severity` (`error`, `warning`, `info`, or `hidden`); metric rules also accept
-their documented `maximum` values. Intentional suppressions belong on the
+Add `hawthorne.json` beside the consuming project file. The NuGet package
+registers it as an `AdditionalFiles` item automatically; when referencing the
+analyzer directly, add it as an `AdditionalFiles` item yourself. Quality rules
+default to warnings, HAW100 is informational, and HAW900 is an error. Each
+quality rule accepts `enabled` and `severity` (`error`, `warning`, `info`, or
+`hidden`); metric rules also accept their documented `maximum` values.
+Intentional suppressions belong on the
 affected source symbol with `SuppressMessageAttribute` and a non-blank
 `Justification`. HAW100–HAW106 are non-suppressible simplification rules:
 HAW901 reports an attempt to suppress one as an error. HAW900 and HAW901 are
@@ -15,11 +17,13 @@ them. The root `_potentialFix` should strongly discourage
 `SuppressMessageAttribute`; it is a last resort only when no code fix is
 available, and it must always have a specific non-blank `Justification`.
 
-When installed from the NuGet package, Hawthorne automatically copies the
-annotated default `hawthorne.json` beside the consuming `.csproj` during the
-first build and registers it as an `AdditionalFiles` input. It never overwrites
-an existing file. Set `HawthorneAutoCreateConfiguration` to `false` to disable
-this behavior.
+When installed from the NuGet package, Hawthorne registers the project's
+`hawthorne.json` as an `AdditionalFiles` input, including when the file already
+exists. If the file is missing, the package copies its annotated default beside
+the consuming `.csproj` during the first build. It never overwrites an existing
+file or adds a duplicate `AdditionalFiles` entry. Set
+`HawthorneAutoCreateConfiguration` to `false` to disable file creation; an
+existing configuration is still registered.
 
 HAW106 is enabled by default. It reports block-bodied methods with multiple
 executable statements on one physical line. Set its `enabled` property to
