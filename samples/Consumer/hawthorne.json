@@ -225,9 +225,9 @@
       "maximumPhysicalLines": 50
     },
     "HAW106": {
-      "_comment": "Reports an opening curly brace or semicolon that is not immediately followed by CRLF. It cannot be source-suppressed.",
-      "_potentialFix": "Put a carriage return and line feed (CRLF) immediately after each opening curly brace and semicolon. This rule only reports the issue; it never edits source files automatically, and HAW901 reports a suppression attempt as an error.",
-      "enabled": false,
+      "_comment": "Reports a block-bodied method with multiple executable statements entirely on one physical line. Expression contents such as string interpolation do not trigger diagnostics by themselves. It cannot be source-suppressed.",
+      "_potentialFix": "Expand the method body across multiple lines so each statement is readable. This rule only reports the issue; it never edits source files automatically, and HAW901 reports a suppression attempt as an error.",
+      "enabled": true,
       "severity": "warning"
     },
     "HAW900": {

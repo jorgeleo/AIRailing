@@ -68,7 +68,7 @@ The .NET SDK resolves GitHub Packages with your `GITHUB_TOKEN` automatically.
 | HAW103 | Control-flow nesting depth                                            | 4                             |
 | HAW104 | Class coupling (distinct referenced types)                            | 12                            |
 | HAW105 | Method length                                                         | 30 statements / 50 lines      |
-| HAW106 | Missing CRLF after opening braces and semicolons                      | opt-in                        |
+| HAW106 | Multiple executable statements in a method body on one line            | warning                       |
 | HAW900 | Invalid `hawthorne.json`                                              | compile error                 |
 | HAW901 | Invalid Hawthorne suppression or `#pragma warning disable`            | warning / error               |
 
@@ -163,8 +163,9 @@ A complete example:
   (`error`, `warning`, `info`, or `hidden`). HAW901's error validation for a
   non-suppressible rule cannot be disabled or downgraded.
 - Metric rules accept their documented `maximum` values.
-- HAW106 is opt-in; enable it to report opening braces and semicolons that are
-  not immediately followed by `\r\n`. It reports only and never edits files.
+- HAW106 is enabled by default; set `"enabled": false` to opt out. It reports
+  block-bodied methods with multiple executable statements on one physical
+  line, and only reports diagnostics without editing files.
 
 See [`samples/Consumer/hawthorne.json`](samples/Consumer/hawthorne.json) for a
 complete annotated configuration containing every supported diagnostic.

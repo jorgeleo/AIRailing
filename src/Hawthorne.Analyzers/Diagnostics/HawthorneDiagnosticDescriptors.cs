@@ -166,12 +166,12 @@ internal static class HawthorneDiagnosticDescriptors
 
     internal static readonly DiagnosticDescriptor HAW106 = new(
         "HAW106",
-        "Missing CRLF after syntax token",
-        "Insert a CRLF after '{0}'",
+        "Multi-statement method on one line",
+        "Method '{0}' has multiple statements on one line; put the body on separate lines",
         FormattingCategory,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: "Opening braces and semicolons must be followed immediately by a carriage return and line feed.",
+        description: "A block-bodied method with multiple executable statements must span multiple physical lines.",
         customTags: new[] { NonSuppressibleTag });
 
     internal static readonly DiagnosticDescriptor HAW900 = new(

@@ -31,6 +31,6 @@ HAW102 | Hawthorne.Complexity | Warning | Cognitive complexity
 HAW103 | Hawthorne.Complexity | Warning | Maximum nesting depth
 HAW104 | Hawthorne.Complexity | Warning | Class coupling
 HAW105 | Hawthorne.Complexity | Warning | Method length
-HAW106 | Hawthorne.Formatting | Warning | Missing CRLF after opening braces and semicolons
+HAW106 | Hawthorne.Formatting | Warning | Multiple statements in a method body on one line
 HAW900 | Hawthorne.Configuration | Error | Invalid Hawthorne configuration
 HAW901 | Hawthorne.Configuration | Warning | Rejects suppressions of non-suppressible rules as errors

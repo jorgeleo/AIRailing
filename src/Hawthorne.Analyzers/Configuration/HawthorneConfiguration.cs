@@ -124,7 +124,6 @@ internal sealed class HawthorneConfiguration
 
     private static HawthorneRuleConfiguration GetDefaultRuleConfiguration(string diagnosticId) => diagnosticId switch
     {
-        "HAW106" => HawthorneRuleConfiguration.FormattingDefault,
         "HAW100" => HawthorneRuleConfiguration.HealthDefault,
         _ => HawthorneRuleConfiguration.Default,
     };
@@ -718,8 +717,6 @@ internal sealed class HawthorneRuleConfiguration
     internal bool IsSeverityConfigured { get; }
 
     internal static HawthorneRuleConfiguration Default { get; } = new(true, DiagnosticSeverity.Warning);
-
-    internal static HawthorneRuleConfiguration FormattingDefault { get; } = new(false, DiagnosticSeverity.Warning);
 
     internal static HawthorneRuleConfiguration HealthDefault { get; } = new(true, DiagnosticSeverity.Info);
 }

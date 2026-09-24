@@ -21,9 +21,10 @@ first build and registers it as an `AdditionalFiles` input. It never overwrites
 an existing file. Set `HawthorneAutoCreateConfiguration` to `false` to disable
 this behavior.
 
-HAW106 is opt-in. Set its `enabled` property to `true` to report missing CRLF
-after opening braces and semicolons. It only produces warnings/diagnostics; it
-does not modify source files automatically.
+HAW106 is enabled by default. It reports block-bodied methods with multiple
+executable statements on one physical line. Set its `enabled` property to
+`false` to opt out. It only produces warnings/diagnostics; it does not modify
+source files automatically.
 
 The implemented next-rule options are documented on each page in
 `Docs/rules/`: architecture rules HAW005–HAW015, HAW020, HAW023, HAW025,
