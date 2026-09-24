@@ -67,7 +67,7 @@ internal static class AnalyzerTestHost
 
         var rules = root["rules"] as JsonObject ?? new JsonObject();
         root["rules"] = rules;
-        foreach (var id in new[] { "HAW015", "HAW020", "HAW023", "HAW025", "HAW029", "HAW030", "HAW100" })
+        foreach (var id in new[] { "HAW015", "HAW020", "HAW023", "HAW025", "HAW029", "HAW030", "HAW100", "HAW106" })
         {
             if (!rules.ContainsKey(id))
             {

@@ -18,7 +18,7 @@ public sealed class HawthorneConfigurationLoaderTests
         Assert.True(result.IsValid);
         Assert.Equal(DiagnosticSeverity.Warning, result.Configuration!.GetRule("HAW105").Severity);
         Assert.True(result.Configuration.GetRule("HAW105").IsEnabled);
-        Assert.False(result.Configuration.GetRule("HAW106").IsEnabled);
+        Assert.True(result.Configuration.GetRule("HAW106").IsEnabled);
     }
 
     [Fact]
@@ -37,7 +37,7 @@ public sealed class HawthorneConfigurationLoaderTests
         Assert.True(configuration.GetRule("HAW030").IsEnabled);
         Assert.True(configuration.GetRule("HAW100").IsEnabled);
         Assert.Equal(DiagnosticSeverity.Info, configuration.GetRule("HAW100").Severity);
-        foreach (var descriptor in HawthorneDiagnosticDescriptors.All.Where(descriptor => descriptor.Id != "HAW106"))
+        foreach (var descriptor in HawthorneDiagnosticDescriptors.All)
         {
             Assert.True(configuration.GetRule(descriptor.Id).IsEnabled, descriptor.Id);
         }

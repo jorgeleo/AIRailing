@@ -100,7 +100,7 @@ public sealed class HawthorneAnalyzerBootstrapTests
             references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
 
         var diagnostics = await compilation
-            .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()))
+            .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), CreateHaw106DisabledOptions())
             .GetAnalyzerDiagnosticsAsync();
 
         var diagnostic = Assert.Single(diagnostics);
@@ -118,7 +118,7 @@ public sealed class HawthorneAnalyzerBootstrapTests
             references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
 
         var diagnostics = await compilation
-            .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()))
+            .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), CreateHaw106DisabledOptions())
             .GetAnalyzerDiagnosticsAsync();
 
         var diagnostic = Assert.Single(diagnostics);
@@ -144,11 +144,11 @@ public sealed class HawthorneAnalyzerBootstrapTests
     }
 
     [Fact]
-    public async Task Analyze_WhenLineBreakRuleIsEnabled_ReportsMissingCrLfAfterOpeningBracesAndSemicolons()
+    public async Task Analyze_WhenSingleLineMethodHasMultipleStatements_ReportsHAW106Once()
     {
         var compilation = CSharpCompilation.Create(
             "TestAssembly",
-            new[] { CSharpSyntaxTree.ParseText("class Example { void Run() { return; } }") },
+            new[] { CSharpSyntaxTree.ParseText("class Example { string Run(int value) { var text = $\"value {value}\"; return text; } }") },
             new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
         var options = new CompilationWithAnalyzersOptions(
             new AnalyzerOptions(ImmutableArray.Create<AdditionalText>(new TestAdditionalText(
@@ -163,11 +163,11 @@ public sealed class HawthorneAnalyzerBootstrapTests
             .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), options)
             .GetAnalyzerDiagnosticsAsync();
 
-        Assert.Equal(3, diagnostics.Count(diagnostic => diagnostic.Id == "HAW106"));
+        Assert.Single(diagnostics.Where(diagnostic => diagnostic.Id == "HAW106"));
     }
 
     [Fact]
-    public async Task Analyze_WhenLineBreakRuleIsEnabled_DoesNotReportExistingCrLf()
+    public async Task Analyze_WhenMethodBodySpansMultipleLines_DoesNotReportHAW106()
     {
         var source = "class Example {\r\n    void Run()\r\n    {\r\n        return;\r\n    }\r\n}";
         var compilation = CSharpCompilation.Create(
@@ -200,7 +200,7 @@ public sealed class HawthorneAnalyzerBootstrapTests
             references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location), MetadataReference.CreateFromFile(typeof(SuppressMessageAttribute).Assembly.Location) });
 
         var diagnostics = await compilation
-            .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()))
+            .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), CreateHaw106DisabledOptions())
             .GetAnalyzerDiagnosticsAsync();
 
         var diagnostic = Assert.Single(diagnostics);
@@ -221,7 +221,7 @@ public sealed class HawthorneAnalyzerBootstrapTests
             new[] { CSharpSyntaxTree.ParseText(source, path: "/project/Legacy.cs") },
             new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location), MetadataReference.CreateFromFile(typeof(SuppressMessageAttribute).Assembly.Location) });
 
-        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), CreateHaw106DisabledOptions()).GetAnalyzerDiagnosticsAsync();
 
         var diagnostic = Assert.Single(diagnostics);
         Assert.Equal("HAW901", diagnostic.Id);
@@ -238,7 +238,7 @@ public sealed class HawthorneAnalyzerBootstrapTests
             new[] { CSharpSyntaxTree.ParseText(source, path: "/project/Legacy.cs") },
             new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location), MetadataReference.CreateFromFile(typeof(SuppressMessageAttribute).Assembly.Location) });
 
-        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), CreateHaw106DisabledOptions()).GetAnalyzerDiagnosticsAsync();
 
         var diagnostic = Assert.Single(diagnostics);
         Assert.Equal("HAW901", diagnostic.Id);
@@ -334,7 +334,7 @@ public sealed class HawthorneAnalyzerBootstrapTests
             new[] { CSharpSyntaxTree.ParseText($"class Example {{ void Complex(int value) {{ {branches} }} }}") },
             new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
 
-        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), CreateHaw106DisabledOptions()).GetAnalyzerDiagnosticsAsync();
 
         Assert.Equal("HAW101", Assert.Single(diagnostics).Id);
     }
@@ -346,7 +346,7 @@ public sealed class HawthorneAnalyzerBootstrapTests
             new[] { CSharpSyntaxTree.ParseText("class Example { void Complex() { if (true) { for (;;) { } } } }") },
             new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
         var options = new CompilationWithAnalyzersOptions(new AnalyzerOptions(ImmutableArray.Create<AdditionalText>(
-            new TestAdditionalText("/project/hawthorne.json", "{ \"version\": 1, \"rules\": { \"HAW102\": { \"maximum\": 2 } } }"))), null, true, false, false);
+            new TestAdditionalText("/project/hawthorne.json", "{ \"version\": 1, \"rules\": { \"HAW102\": { \"maximum\": 2 }, \"HAW106\": { \"enabled\": false } } }"))), null, true, false, false);
 
         var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), options).GetAnalyzerDiagnosticsAsync();
 
@@ -442,7 +442,7 @@ public sealed class HawthorneAnalyzerBootstrapTests
                 """) },
             new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
 
-        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
+        var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap()), CreateHaw106DisabledOptions()).GetAnalyzerDiagnosticsAsync();
 
         Assert.Empty(diagnostics);
     }
@@ -783,6 +783,16 @@ public sealed class HawthorneAnalyzerBootstrapTests
         var diagnostics = await compilation.WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(new HawthorneAnalyzerBootstrap())).GetAnalyzerDiagnosticsAsync();
         Assert.Empty(diagnostics);
     }
+
+    private static CompilationWithAnalyzersOptions CreateHaw106DisabledOptions() =>
+        new(
+            new AnalyzerOptions(ImmutableArray.Create<AdditionalText>(new TestAdditionalText(
+                "/project/hawthorne.json",
+                "{ \"version\": 1, \"rules\": { \"HAW106\": { \"enabled\": false } } }"))),
+            null,
+            true,
+            false,
+            false);
 
     private sealed class TestAdditionalText(string path, string text) : AdditionalText
     {
